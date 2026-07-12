@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: travel-planner
+  profiles:
+    active: dev
+  jpa:
+    hibernate:
+      ddl-auto: update # doi thanh "validate" va dung Flyway/Liquibase khi len production that
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
