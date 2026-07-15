@@ -26,7 +26,7 @@ public interface DestinationService {
      * Day la buoc "Loc theo rang buoc cung" trong pipeline goi y da thiet
      * ke - ban co the mo rong them buoc vector search phia truoc ham nay.
      */
-    List<DestinationResponse> recommend(BigDecimal maxBudgetPerDay, Integer travelMonth);
+    List<DestinationResponse> recommend(String userId, BigDecimal maxBudgetPerDay, Integer travelMonth);
 
     DestinationResponse update(String id, DestinationRequest request);
 

@@ -13,6 +13,9 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.List;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import com.pgvector.PGvector;
 
 /**
  * Destination = mot diem den co the duoc goi y trong lich trinh.
@@ -51,4 +54,18 @@ public class Destination extends BaseEntity {
     @Column(name = "popularity_score")
     @Builder.Default
     private Double popularityScore = 0.0;
+
+    @Column(name = "rating_average")
+    @Builder.Default
+    private Double ratingAverage = 0.0;
+
+    @Column(name = "review_count")
+    @Builder.Default
+    private Integer reviewCount = 0;
+
+    @Column(columnDefinition = "vector(384)")
+    private PGvector embedding;
+
+    private Double latitude;
+    private Double longitude;
 }

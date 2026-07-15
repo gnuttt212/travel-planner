@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.security.core.Authentication;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -45,10 +46,12 @@ public class DestinationController {
      */
     @GetMapping("/recommend")
     public ApiResponse<List<DestinationResponse>> recommend(
+            Authentication authentication,
             @RequestParam BigDecimal maxBudgetPerDay,
             @RequestParam Integer travelMonth
     ) {
-        return ApiResponse.success(destinationService.recommend(maxBudgetPerDay, travelMonth));
+        String userId = authentication.getName();
+        return ApiResponse.success(destinationService.recommend(userId, maxBudgetPerDay, travelMonth));
     }
 
     @PutMapping("/{id}")

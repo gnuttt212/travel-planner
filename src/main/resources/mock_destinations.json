@@ -1,0 +1,82 @@
+[
+  {
+    "name": "Vịnh Hạ Long",
+    "country": "Việt Nam",
+    "description": "Kỳ quan thiên nhiên thế giới với hàng ngàn hòn đảo đá vôi kỳ vĩ trên biển xanh. Phù hợp cho du lịch nghỉ dưỡng, đi du thuyền và khám phá hang động.",
+    "tags": ["biển", "thiên-nhiên", "nghỉ-dưỡng", "gia-đình"],
+    "bestMonths": [4, 5, 6, 9, 10],
+    "avgCostPerDay": 1500000
+  },
+  {
+    "name": "Đà Lạt",
+    "country": "Việt Nam",
+    "description": "Thành phố sương mù với khí hậu ôn đới quanh năm, rừng thông bạt ngàn, thác nước và ngàn hoa khoe sắc. Thích hợp cho các cặp đôi và người thích sự lãng mạn.",
+    "tags": ["núi", "thiên-nhiên", "lãng-mạn", "cặp-đôi", "thư-giãn"],
+    "bestMonths": [1, 2, 3, 4, 10, 11, 12],
+    "avgCostPerDay": 1000000
+  },
+  {
+    "name": "Phú Quốc",
+    "country": "Việt Nam",
+    "description": "Đảo ngọc với những bãi biển cát trắng trải dài, nước biển trong xanh và hải sản tươi ngon. Thích hợp cho kỳ nghỉ biển, gia đình và nhóm bạn.",
+    "tags": ["biển", "nghỉ-dưỡng", "hải-sản", "gia-đình", "hoạt-động-nước"],
+    "bestMonths": [1, 2, 3, 4, 11, 12],
+    "avgCostPerDay": 2000000
+  },
+  {
+    "name": "Hội An",
+    "country": "Việt Nam",
+    "description": "Phố cổ yên bình với những ngôi nhà cổ kính lợp ngói âm dương, đèn lồng rực rỡ và ẩm thực phong phú. Phù hợp với những ai thích văn hóa, lịch sử.",
+    "tags": ["văn-hóa", "lịch-sử", "ẩm-thực", "yên-bình"],
+    "bestMonths": [2, 3, 4, 8, 9, 10],
+    "avgCostPerDay": 800000
+  },
+  {
+    "name": "Sapa",
+    "country": "Việt Nam",
+    "description": "Thị trấn vùng cao với ruộng bậc thang tuyệt đẹp, đỉnh Fansipan hùng vĩ và bản sắc văn hóa các dân tộc thiểu số.",
+    "tags": ["núi", "văn-hóa", "phiêu-lưu", "trekking"],
+    "bestMonths": [3, 4, 5, 9, 10, 11],
+    "avgCostPerDay": 1200000
+  },
+  {
+    "name": "Đà Nẵng",
+    "country": "Việt Nam",
+    "description": "Thành phố đáng sống với bãi biển Mỹ Khê xinh đẹp, cầu Rồng độc đáo và Bà Nà Hills. Giao thoa giữa nét hiện đại và thiên nhiên.",
+    "tags": ["biển", "hiện-đại", "ẩm-thực", "gia-đình"],
+    "bestMonths": [2, 3, 4, 5, 6, 7],
+    "avgCostPerDay": 1200000
+  },
+  {
+    "name": "Nha Trang",
+    "country": "Việt Nam",
+    "description": "Thiên đường biển đảo với nhiều khu vui chơi giải trí, lặn ngắm san hô và tắm bùn khoáng.",
+    "tags": ["biển", "giải-trí", "gia-đình", "hoạt-động-nước"],
+    "bestMonths": [1, 2, 3, 4, 5, 6, 7, 8],
+    "avgCostPerDay": 1300000
+  },
+  {
+    "name": "Mộc Châu",
+    "country": "Việt Nam",
+    "description": "Cao nguyên xanh mát với những đồi chè bạt ngàn, mùa hoa mận trắng xóa và thác Dải Yếm mộng mơ.",
+    "tags": ["núi", "thiên-nhiên", "thư-giãn", "check-in"],
+    "bestMonths": [1, 2, 11, 12],
+    "avgCostPerDay": 700000
+  },
+  {
+    "name": "Huế",
+    "country": "Việt Nam",
+    "description": "Cố đô cổ kính với hệ thống lăng tẩm, đại nội và nhã nhạc cung đình. Mang đậm dấu ấn lịch sử triều Nguyễn.",
+    "tags": ["lịch-sử", "văn-hóa", "ẩm-thực", "yên-bình"],
+    "bestMonths": [2, 3, 4, 9, 10],
+    "avgCostPerDay": 900000
+  },
+  {
+    "name": "Ninh Bình",
+    "country": "Việt Nam",
+    "description": "Tràng An, Tam Cốc với cảnh sắc non nước hữu tình, được mệnh danh là 'Hạ Long trên cạn', vô cùng thanh bình và hoành tráng.",
+    "tags": ["thiên-nhiên", "lịch-sử", "chèo-thuyền", "khám-phá"],
+    "bestMonths": [1, 2, 3, 5, 6],
+    "avgCostPerDay": 900000
+  }
+]

@@ -25,4 +25,25 @@ public interface DestinationRepository extends JpaRepository<Destination, String
             @Param("maxBudgetPerDay") BigDecimal maxBudgetPerDay,
             @Param("month") Integer month
     );
+
+    /**
+     * Native query de ho tro toan tu <-> cua pgvector va tinh Bayesian Average.
+     */
+    @Query(value = """
+            SELECT d.* FROM destinations d
+            JOIN destination_best_months dbm ON d.id = dbm.destination_id
+            WHERE d.avg_cost_per_day <= :maxBudgetPerDay
+            AND dbm.best_months = :month
+            ORDER BY (d.embedding <-> CAST(:userVector AS vector)) ASC,
+            ((:C * :m + d.review_count * d.rating_average) / (:C + d.review_count)) DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<Destination> findRecommendedDestinationsNative(
+            @Param("maxBudgetPerDay") BigDecimal maxBudgetPerDay,
+            @Param("month") Integer month,
+            @Param("userVector") String userVector,
+            @Param("C") double C,
+            @Param("m") double m,
+            @Param("limit") int limit
+    );
 }
