@@ -3,6 +3,9 @@ spring:
     name: travel-planner
   profiles:
     active: dev
+  sql:
+    init:
+      mode: always
   jpa:
     hibernate:
       ddl-auto: update # doi thanh "validate" va dung Flyway/Liquibase khi len production that
@@ -24,3 +27,12 @@ management:
     web:
       exposure:
         include: health,info
+
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000
+
+gemini:
+  api:
+    key: "YOUR_GEMINI_API_KEY_HERE"
+    url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
