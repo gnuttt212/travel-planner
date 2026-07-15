@@ -11,8 +11,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.travelplanner.user.domain.UserPreference;
+import com.travelplanner.user.repository.UserPreferenceRepository;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor // constructor injection - de test, tuan thu DIP
@@ -21,6 +24,7 @@ public class DestinationServiceImpl implements DestinationService {
 
     private final DestinationRepository destinationRepository;
     private final DestinationMapper destinationMapper;
+    private final UserPreferenceRepository userPreferenceRepository;
 
     @Override
     @Transactional
@@ -43,11 +47,20 @@ public class DestinationServiceImpl implements DestinationService {
     }
 
     @Override
-    public List<DestinationResponse> recommend(BigDecimal maxBudgetPerDay, Integer travelMonth) {
-        // Buoc "Loc theo rang buoc cung" trong pipeline goi y diem den.
-        // TODO giai doan sau: them buoc vector search (tim kiem ngu nghia
-        // theo so thich nguoi dung) truoc khi goi ham nay, roi ket hop
-        // diem tuong dong voi popularityScore de xep hang cuoi cung.
+    public List<DestinationResponse> recommend(String userId, BigDecimal maxBudgetPerDay, Integer travelMonth) {
+        Optional<UserPreference> prefOpt = userPreferenceRepository.findByUserId(userId);
+        
+        if (prefOpt.isPresent() && prefOpt.get().getPreferenceVector() != null) {
+            String vectorStr = prefOpt.get().getPreferenceVector().toString();
+            // C = 10 (min reviews), m = 4.0 (avg rating) for Bayesian calc
+            return destinationRepository.findRecommendedDestinationsNative(
+                    maxBudgetPerDay, travelMonth, vectorStr, 10.0, 4.0, 5)
+                    .stream()
+                    .map(destinationMapper::toResponse)
+                    .toList();
+        }
+        
+        // Fallback to basic hard filter
         return destinationRepository.findMatchingDestinations(maxBudgetPerDay, travelMonth).stream()
                 .map(destinationMapper::toResponse)
                 .toList();
