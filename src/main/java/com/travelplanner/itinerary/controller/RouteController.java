@@ -30,7 +30,7 @@ public class RouteController {
         if (coordinates != null) {
             return ApiResponse.success(coordinates);
         } else {
-            return ApiResponse.error(404, "Location not found");
+            return ApiResponse.error("Location not found");
         }
     }
 }

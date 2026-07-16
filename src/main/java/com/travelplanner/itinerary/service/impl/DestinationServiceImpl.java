@@ -51,7 +51,7 @@ public class DestinationServiceImpl implements DestinationService {
         Optional<UserPreference> prefOpt = userPreferenceRepository.findByUserId(userId);
         
         if (prefOpt.isPresent() && prefOpt.get().getPreferenceVector() != null) {
-            String vectorStr = prefOpt.get().getPreferenceVector().toString();
+            String vectorStr = prefOpt.get().getPreferenceVector();
             // C = 10 (min reviews), m = 4.0 (avg rating) for Bayesian calc
             return destinationRepository.findRecommendedDestinationsNative(
                     maxBudgetPerDay, travelMonth, vectorStr, 10.0, 4.0, 5)

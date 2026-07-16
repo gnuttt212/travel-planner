@@ -29,7 +29,7 @@ public class CollaborativeFilteringService {
             return List.of(); // Need preferences to find similar users
         }
 
-        String userVector = prefOpt.get().getPreferenceVector().toString();
+        String userVector = prefOpt.get().getPreferenceVector();
         
         // 1. Find Top 10 similar users using Cosine Similarity (<=>)
         List<String> similarUsers = userPreferenceRepository.findSimilarUsers(userId, userVector, 10);
