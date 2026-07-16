@@ -29,10 +29,10 @@ public class GeminiService {
 
     private final ObjectMapper objectMapper;
 
-    public String generateDetailedItinerary(List<DestinationResponse> topDestinations, UserPreference userPreference) {
+    public String generateDetailedItinerary(List<DestinationResponse> topDestinations, UserPreference userPreference, String weatherContext) {
         RestTemplate restTemplate = new RestTemplate();
 
-        String prompt = buildPrompt(topDestinations, userPreference);
+        String prompt = buildPrompt(topDestinations, userPreference, weatherContext);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -59,11 +59,21 @@ public class GeminiService {
         }
     }
 
-    private String buildPrompt(List<DestinationResponse> topDestinations, UserPreference userPreference) {
+    private String buildPrompt(List<DestinationResponse> topDestinations, UserPreference userPreference, String weatherContext) {
         StringBuilder prompt = new StringBuilder();
         prompt.append("You are an expert travel planner AI.\n");
         prompt.append("Based on the following top ranked destinations that perfectly match the user's budget and month of travel, ");
         prompt.append("generate a highly detailed 3-day itinerary.\n\n");
+        
+        // Weather-aware prompt injection
+        if (weatherContext != null && weatherContext.toLowerCase().contains("rain")) {
+            prompt.append("⚠️ WEATHER ALERT: ").append(weatherContext).append("\n");
+            prompt.append("IMPORTANT: Rain is expected during this trip. You MUST prioritize indoor activities ");
+            prompt.append("(museums, art galleries, cafes, shopping malls, indoor entertainment, spa, cooking classes) ");
+            prompt.append("and minimize outdoor exposure. Only suggest outdoor activities with rain contingency plans.\n\n");
+        } else if (weatherContext != null) {
+            prompt.append("Weather: ").append(weatherContext).append("\n\n");
+        }
         
         prompt.append("User Preferences:\n");
         if (userPreference != null) {

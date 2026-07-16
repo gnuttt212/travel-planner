@@ -33,7 +33,9 @@ public class DestinationMapper {
                 entity.getTags(),
                 entity.getBestMonths(),
                 entity.getAvgCostPerDay(),
-                entity.getPopularityScore()
+                entity.getPopularityScore(),
+                entity.getLatitude(),
+                entity.getLongitude()
         );
     }
 }

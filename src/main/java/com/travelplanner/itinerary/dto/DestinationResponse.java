@@ -11,6 +11,8 @@ public record DestinationResponse(
         List<String> tags,
         List<Integer> bestMonths,
         BigDecimal avgCostPerDay,
-        Double popularityScore
+        Double popularityScore,
+        Double latitude,
+        Double longitude
 ) {
 }

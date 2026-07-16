@@ -4,6 +4,7 @@ import com.travelplanner.common.response.ApiResponse;
 import com.travelplanner.itinerary.dto.DestinationResponse;
 import com.travelplanner.itinerary.service.DestinationService;
 import com.travelplanner.itinerary.service.GeminiService;
+import com.travelplanner.itinerary.service.WeatherService;
 import com.travelplanner.user.domain.UserPreference;
 import com.travelplanner.user.repository.UserPreferenceRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/itineraries")
@@ -24,6 +24,7 @@ public class ItineraryController {
 
     private final DestinationService destinationService;
     private final GeminiService geminiService;
+    private final WeatherService weatherService;
     private final UserPreferenceRepository userPreferenceRepository;
 
     @GetMapping("/generate")
@@ -44,8 +45,15 @@ public class ItineraryController {
         // 2. Fetch User Profile for prompt context
         UserPreference userPreference = userPreferenceRepository.findByUserId(userId).orElse(null);
         
-        // 3. Generate detailed itinerary via Gemini RAG
-        String detailedItinerary = geminiService.generateDetailedItinerary(topDestinations, userPreference);
+        // 3. Fetch weather for primary destination
+        String weatherContext = null;
+        DestinationResponse primary = topDestinations.get(0);
+        if (primary.latitude() != null && primary.longitude() != null) {
+            weatherContext = weatherService.getWeatherForecast(primary.latitude(), primary.longitude());
+        }
+        
+        // 4. Generate detailed itinerary via Gemini RAG (weather-aware)
+        String detailedItinerary = geminiService.generateDetailedItinerary(topDestinations, userPreference, weatherContext);
         
         return ApiResponse.success(detailedItinerary);
     }

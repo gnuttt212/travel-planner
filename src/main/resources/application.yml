@@ -36,3 +36,16 @@ gemini:
   api:
     key: "YOUR_GEMINI_API_KEY_HERE"
     url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+
+ors:
+  api:
+    key: "YOUR_ORS_API_KEY_HERE"
+    url: "https://api.openrouteservice.org"
+
+openweathermap:
+  api:
+    key: "YOUR_OWM_API_KEY_HERE"
+    url: "https://api.openweathermap.org/data/2.5/forecast"
+
+rate-limit:
+  requests-per-minute: 5

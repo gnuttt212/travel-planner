@@ -30,4 +30,7 @@ public class Itinerary extends BaseEntity {
     private LocalDate startDate;
 
     private LocalDate endDate;
+
+    @Column(columnDefinition = "TEXT")
+    private String content;
 }
