@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
 import Destinations from './pages/Destinations';
@@ -15,9 +15,9 @@ function App() {
           <h1>TravelPlanner AI</h1>
           {token && (
             <div className="nav-links">
-              <a href="/onboarding">Onboarding</a>
-              <a href="/destinations">Explore</a>
-              <a href="/planner">Planner</a>
+              <Link to="/onboarding">Onboarding</Link>
+              <Link to="/destinations">Explore</Link>
+              <Link to="/planner">Planner</Link>
               <button onClick={() => {
                 localStorage.removeItem('token');
                 window.location.href = '/login';
