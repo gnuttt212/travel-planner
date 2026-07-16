@@ -24,6 +24,8 @@ const Onboarding: React.FC = () => {
         travelStyle,
         groupType
       });
+      localStorage.setItem('maxBudget', maxBudget.toString());
+      localStorage.setItem('travelMonth', (new Date().getMonth() + 1).toString());
       navigate('/destinations');
     } catch (e) {
       alert('Failed to save preferences');

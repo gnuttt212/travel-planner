@@ -34,9 +34,12 @@ const Destinations: React.FC = () => {
 
   const fetchDestinations = async () => {
     try {
+      const maxBudget = localStorage.getItem('maxBudget') || '2000000';
+      const travelMonth = localStorage.getItem('travelMonth') || '6';
+
       // 1. Get standard recommendations
       const res = await api.get('/destinations/recommend', {
-        params: { maxBudgetPerDay: 2000000, travelMonth: 6 }
+        params: { maxBudgetPerDay: maxBudget, travelMonth }
       });
       
       // 2. Mix with collaborative recommendations
@@ -59,9 +62,16 @@ const Destinations: React.FC = () => {
     }
   };
 
-  const handleInteraction = async (id: string, type: string) => {
+  const handleInteraction = async (dest: Destination, type: string) => {
     try {
-      await api.post(`/interactions?destinationId=${id}&type=${type}`);
+      await api.post('/interactions', { destinationId: dest.id, interactionType: type });
+      if (type === 'SELECT') {
+          const selected = JSON.parse(localStorage.getItem('selectedDestinations') || '[]');
+          if (!selected.find((x: any) => x.id === dest.id)) {
+              selected.push(dest);
+              localStorage.setItem('selectedDestinations', JSON.stringify(selected));
+          }
+      }
       alert(`${type} recorded! Popularity score will update soon.`);
     } catch (e) {
       console.error(e);
@@ -80,8 +90,8 @@ const Destinations: React.FC = () => {
               <h3>{d.name}</h3>
               <p>{d.description}</p>
               <div className="card-actions">
-                <button onClick={() => handleInteraction(d.id, 'SAVE')}>Save</button>
-                <button onClick={() => handleInteraction(d.id, 'SELECT')} className="primary-btn">Select for Trip</button>
+                <button onClick={() => handleInteraction(d, 'SAVE')}>Save</button>
+                <button onClick={() => handleInteraction(d, 'SELECT')} className="primary-btn">Select for Trip</button>
               </div>
             </div>
           ))}

@@ -12,11 +12,26 @@ interface Waypoint {
   longitude: number;
 }
 
-const initialWaypoints: Waypoint[] = [
-  { id: '1', destinationId: 'd1', name: 'Hội An', latitude: 15.88, longitude: 108.33 },
-  { id: '2', destinationId: 'd2', name: 'Đà Nẵng', latitude: 16.07, longitude: 108.22 },
-  { id: '3', destinationId: 'd3', name: 'Huế', latitude: 16.46, longitude: 107.59 },
-];
+const loadInitialWaypoints = (): Waypoint[] => {
+  try {
+    const selected = JSON.parse(localStorage.getItem('selectedDestinations') || '[]');
+    if (selected && selected.length > 0) {
+      return selected.map((d: any, index: number) => ({
+        id: `wp-${index}-${d.id}`,
+        destinationId: d.id,
+        name: d.name,
+        latitude: d.latitude,
+        longitude: d.longitude
+      }));
+    }
+  } catch (e) {}
+  
+  return [
+    { id: '1', destinationId: '1', name: 'Hội An', latitude: 15.88, longitude: 108.33 },
+    { id: '2', destinationId: '2', name: 'Đà Nẵng', latitude: 16.07, longitude: 108.22 },
+    { id: '3', destinationId: '3', name: 'Huế', latitude: 16.46, longitude: 107.59 },
+  ];
+};
 
 const SortableItem = ({ id, wp }: { id: string, wp: Waypoint }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
@@ -33,7 +48,7 @@ const SortableItem = ({ id, wp }: { id: string, wp: Waypoint }) => {
 };
 
 const Planner: React.FC = () => {
-  const [items, setItems] = useState<Waypoint[]>(initialWaypoints);
+  const [items, setItems] = useState<Waypoint[]>(loadInitialWaypoints());
   const [optimizing, setOptimizing] = useState(false);
   const [stats, setStats] = useState({ distance: 0, duration: 0 });
 
