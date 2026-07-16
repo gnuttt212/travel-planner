@@ -41,7 +41,7 @@ graph TD
     User([ User]) --> |HTTPS / WSS| ReactFrontend
     
     subgraph "Frontend Layer"
-        ReactFrontend[ React + Vite App\nLeaflet | DnD-Kit | Axios]:::frontend
+        ReactFrontend["React + Vite App<br/>Leaflet | DnD-Kit | Axios"]:::frontend
     end
     
     ReactFrontend --> |REST APIs| ApiGateway
@@ -49,19 +49,19 @@ graph TD
     
     %% Backend
     subgraph "Spring Boot Backend (Modular Monolith)"
-        ApiGateway[ Security Filter Chain\nJWT Auth]:::backend
-        RateLimiter[ Bucket4j Rate Limiter]:::backend
+        ApiGateway["Security Filter Chain<br/>JWT Auth"]:::backend
+        RateLimiter["Bucket4j Rate Limiter"]:::backend
         
         ApiGateway --> RateLimiter
         RateLimiter --> Modules
         
         subgraph Modules ["Business Modules"]
-            AuthMod[ User/Auth Module]:::backend
-            ItineraryMod[🗺️ Itinerary Module\nVector Search | CF]:::backend
-            BudgetMod[ Budget Module]:::backend
-            CollabMod[ Collaboration Module]:::backend
-            BookingMod[ Booking Module\nAdapter Pattern]:::backend
-            FeedbackMod[ Interaction/Feedback\nScheduled Jobs]:::backend
+            AuthMod["User/Auth Module"]:::backend
+            ItineraryMod["🗺️ Itinerary Module<br/>Vector Search | CF"]:::backend
+            BudgetMod["Budget Module"]:::backend
+            CollabMod["Collaboration Module"]:::backend
+            BookingMod["Booking Module<br/>Adapter Pattern"]:::backend
+            FeedbackMod["Interaction/Feedback<br/>Scheduled Jobs"]:::backend
         end
         
         WebSocketHub(( WebSocket Config)):::backend
@@ -70,8 +70,8 @@ graph TD
 
     %% Databases
     subgraph "Data Storage"
-        PostgreSQL[( PostgreSQL 16\npgvector)]:::database
-        Redis[( Redis\nCache / Rate Limiter)]:::database
+        PostgreSQL[("PostgreSQL 16<br/>pgvector")]:::database
+        Redis[("Redis<br/>Cache / Rate Limiter")]:::database
     end
     
     Modules --> PostgreSQL
