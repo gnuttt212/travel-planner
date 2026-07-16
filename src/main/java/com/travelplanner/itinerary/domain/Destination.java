@@ -13,9 +13,6 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.List;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-import com.pgvector.PGvector;
 
 /**
  * Destination = mot diem den co the duoc goi y trong lich trinh.
@@ -63,9 +60,15 @@ public class Destination extends BaseEntity {
     @Builder.Default
     private Integer reviewCount = 0;
 
-    @Column(columnDefinition = "vector(384)")
-    private PGvector embedding;
+    /**
+     * Vector embedding cho tim kiem ngu nghia.
+     * Luu tru duoi dang String (vd: "[0.1,0.2,...]").
+     * Chuyen doi sang kieu vector trong native SQL bang CAST(:val AS vector).
+     */
+    @Column(name = "embedding", columnDefinition = "text")
+    private String embedding;
 
     private Double latitude;
     private Double longitude;
 }
+

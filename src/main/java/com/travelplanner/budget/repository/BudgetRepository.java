@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
+
 public interface BudgetRepository extends JpaRepository<Budget, String> {
     List<Budget> findByItineraryId(String itineraryId);
 }

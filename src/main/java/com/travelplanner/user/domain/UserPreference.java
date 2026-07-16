@@ -1,6 +1,5 @@
 package com.travelplanner.user.domain;
 
-import com.pgvector.PGvector;
 import com.travelplanner.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -40,6 +39,11 @@ public class UserPreference extends BaseEntity {
 
     private String groupType;
 
-    @Column(columnDefinition = "vector(384)")
-    private PGvector preferenceVector;
+    /**
+     * Vector preferences cho collaborative filtering.
+     * Luu tru duoi dang String, su dung CAST trong native SQL.
+     */
+    @Column(name = "preference_vector", columnDefinition = "text")
+    private String preferenceVector;
 }
+

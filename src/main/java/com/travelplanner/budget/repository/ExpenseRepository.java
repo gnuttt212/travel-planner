@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
+
 public interface ExpenseRepository extends JpaRepository<Expense, String> {
 
     List<Expense> findByBudgetId(String budgetId);

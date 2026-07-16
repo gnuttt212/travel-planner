@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
+
 public interface UserInteractionRepository extends JpaRepository<UserInteraction, String> {
 
     @Query("SELECT ui.destinationId, SUM(ui.weight) FROM UserInteraction ui GROUP BY ui.destinationId")
