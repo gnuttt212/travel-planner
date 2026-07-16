@@ -1,76 +1,154 @@
-# Travel Planner - Backend (Spring Boot)
+# 🌍 Travel Planner AI
 
-Nen tang khoi dau cho ung dung len ke hoach du lich, thiet ke theo kien
-truc **Modular Monolith**: mot ung dung duy nhat nhung chia thanh cac
-module nghiep vu co ranh gioi ro rang, de bao tri o giai doan dau va co
-the tach thanh microservices sau nay neu can.
+An advanced, AI-powered travel planning application built with a **Modular Monolith** architecture on Spring Boot 3 and a modern **React** frontend. The system leverages Vector Databases, Generative AI, and Open-Source GIS technologies to provide highly personalized, weather-aware, and perfectly optimized travel itineraries.
 
-## Cau truc thu muc
+## 🚀 Key Features
 
+* **🧠 AI-Powered RAG Itinerary Generation:** Uses Google's Gemini AI combined with a PostgreSQL `pgvector` database to generate highly detailed, personalized itineraries based on user preferences.
+* **⛅ Weather-Aware AI Prompting:** Integrates with OpenWeatherMap. If rain is forecast, the system dynamically alters the AI prompt to prioritize indoor activities (museums, cafes).
+* **🤖 Smart Recommendation Engine:**
+  * **Vector Search:** Matches destinations with the user's weighted tags.
+  * **Bayesian Average:** Factors in destination ratings.
+  * **Continuous Feedback Loop:** Automatically updates popularity scores based on user interactions (View, Save, Select) via a scheduled job.
+  * **Collaborative Filtering:** Uses Cosine Similarity to recommend destinations that "users similar to you" have selected.
+* **🗺️ Open-Source GIS Stack:**
+  * **Map UI:** React-Leaflet rendering OpenStreetMap tiles.
+  * **Geocoding:** Nominatim API for location lookups.
+  * **TSP Optimization:** OpenRouteService (ORS) VROOM API reorganizes your itinerary to minimize travel time (with a Haversine/Nearest Neighbor fallback).
+* **🤝 Real-Time Collaboration:** WebSocket + STOMP integration allows multiple users (Owners/Editors) to edit the same trip simultaneously.
+* **💰 Budget Tracking:** Complete expense management with category and daily summaries.
+* **✈️ Booking (Adapter Pattern):** A flexible mock booking module designed with the Open/Closed Principle to easily swap flight and hotel providers.
+* **🛡️ Security & Rate Limiting:** JWT-based authentication. High-cost APIs (Gemini, ORS) are protected by a **Bucket4j + Redis** rate limiter.
+* **📄 Export Options:** Export itineraries to **PDF** or directly to **Google/Apple Calendar (ICS)**.
+
+---
+
+## 🏗️ Architecture
+
+The backend follows a strict **Modular Monolith** pattern. Each domain (`user`, `itinerary`, `budget`, `collaboration`, `booking`, `interaction`) is isolated, ensuring high maintainability and easy transition to microservices in the future.
+
+### System Architecture Diagram
+
+```mermaid
+graph TD
+    %% Define styles
+    classDef frontend fill:#3b82f6,stroke:#1e3a8a,stroke-width:2px,color:#fff;
+    classDef backend fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff;
+    classDef database fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff;
+    classDef external fill:#8b5cf6,stroke:#5b21b6,stroke-width:2px,color:#fff;
+    
+    %% Frontend
+    User([👨‍💻 User]) --> |HTTPS / WSS| ReactFrontend
+    
+    subgraph "Frontend Layer"
+        ReactFrontend[⚛️ React + Vite App\nLeaflet | DnD-Kit | Axios]:::frontend
+    end
+    
+    ReactFrontend --> |REST APIs| ApiGateway
+    ReactFrontend --> |STOMP/WS| WebSocketHub
+    
+    %% Backend
+    subgraph "Spring Boot Backend (Modular Monolith)"
+        ApiGateway[🛡️ Security Filter Chain\nJWT Auth]:::backend
+        RateLimiter[🚦 Bucket4j Rate Limiter]:::backend
+        
+        ApiGateway --> RateLimiter
+        RateLimiter --> Modules
+        
+        subgraph Modules ["Business Modules"]
+            AuthMod[👤 User/Auth Module]:::backend
+            ItineraryMod[🗺️ Itinerary Module\nVector Search | CF]:::backend
+            BudgetMod[💰 Budget Module]:::backend
+            CollabMod[🤝 Collaboration Module]:::backend
+            BookingMod[✈️ Booking Module\nAdapter Pattern]:::backend
+            FeedbackMod[🔄 Interaction/Feedback\nScheduled Jobs]:::backend
+        end
+        
+        WebSocketHub((📡 WebSocket Config)):::backend
+        CollabMod -.-> WebSocketHub
+    end
+
+    %% Databases
+    subgraph "Data Storage"
+        PostgreSQL[(🐘 PostgreSQL 16\npgvector)]:::database
+        Redis[(🟥 Redis\nCache / Rate Limiter)]:::database
+    end
+    
+    Modules --> PostgreSQL
+    RateLimiter --> Redis
+    
+    %% External Services
+    subgraph "External APIs"
+        Gemini[🧠 Google Gemini AI]:::external
+        OpenWeather[⛅ OpenWeatherMap]:::external
+        ORS[🚗 OpenRouteService]:::external
+        Nominatim[📍 OSM Nominatim]:::external
+    end
+    
+    ItineraryMod --> |RAG Prompting| Gemini
+    ItineraryMod --> |Forecast| OpenWeather
+    ItineraryMod --> |TSP Optimization| ORS
+    ItineraryMod --> |Geocoding| Nominatim
 ```
-com.travelplanner
-├── common/              # ha tang dung chung: config, exception, response, base entity
-├── itinerary/            # module Lich trinh + goi y diem den (AI) - da implement mau
-│   ├── domain/           # entity
-│   ├── dto/              # request/response
-│   ├── repository/       # Spring Data JPA
-│   ├── service/           # interface (Controller phu thuoc vao day)
-│   │   └── impl/          # implementation
-│   ├── mapper/            # chuyen doi entity <-> dto
-│   └── controller/       # REST endpoint
-├── budget/               # module Ngan sach (package rong, xem package-info.java)
-├── collaboration/        # module Cong tac nhom - realtime qua WebSocket (package rong)
-└── booking/              # module Dat dich vu - Adapter pattern goi ben thu 3 (package rong)
+
+---
+
+## 📦 Project Structure
+
+```text
+travel-planner/
+├── frontend/                     # React Vite Application
+│   ├── src/
+│   │   ├── pages/                # Login, Onboarding, Destinations, Planner
+│   │   ├── api.ts                # Axios instance with JWT interceptor
+│   │   └── index.css             # Vanilla CSS UI
+├── src/main/java/com/travelplanner/
+│   ├── common/                   # Shared Configs (Security, Rate Limiting, WS)
+│   ├── user/                     # User Auth & Preferences (pgvector)
+│   ├── itinerary/                # Destinations, Route Optimization, Exporting
+│   ├── budget/                   # Expense tracking
+│   ├── collaboration/            # Real-time WebSockets
+│   ├── booking/                  # Adapter pattern for booking providers
+│   └── interaction/              # Feedback loop & Popularity scheduler
+└── docker-compose.yml            # PostgreSQL (pgvector) and Redis setup
 ```
 
-Moi module tiep theo (budget, collaboration, booking) nen theo dung cau
-truc con nhu itinerary: `domain / dto / repository / service / service.impl
-/ mapper / controller`. Xem file `package-info.java` trong tung package
-de biet dinh huong entity va endpoint goi y.
+## 🛠️ Getting Started
 
-## Chay du an
+### Prerequisites
+- Java 17
+- Node.js & npm
+- Docker (for PostgreSQL & Redis)
 
-1. Khoi dong PostgreSQL + Redis bang Docker:
-   ```bash
-   docker compose up -d
-   ```
-
-2. Chay ung dung:
-   ```bash
-   ./mvnw spring-boot:run
-   ```
-
-3. Truy cap Swagger UI de xem/test API:
-   ```
-   http://localhost:8080/swagger-ui.html
-   ```
-
-## Vi du goi API module Itinerary
-
+### 1. Setup Infrastructure
+Start the required databases using Docker:
 ```bash
-# Tao diem den
-curl -X POST http://localhost:8080/api/v1/destinations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Vung Tau",
-    "country": "Vietnam",
-    "description": "Bai bien gan thanh pho, hai san tuoi, phu hop di ngan ngay",
-    "tags": ["bien", "am-thuc"],
-    "bestMonths": [3,4,5,6,7,8],
-    "avgCostPerDay": 800000
-  }'
-
-# Goi y diem den theo ngan sach va thang di
-curl "http://localhost:8080/api/v1/destinations/recommend?maxBudgetPerDay=1000000&travelMonth=8"
+docker-compose up -d
 ```
 
-## Buoc tiep theo de hoan thien du an
+### 2. Configure Environment Variables
+Open `src/main/resources/application.yml` and insert your API keys:
+```yaml
+gemini.api.key: "YOUR_GEMINI_API_KEY_HERE"
+ors.api.key: "YOUR_ORS_API_KEY_HERE"
+openweathermap.api.key: "YOUR_OWM_API_KEY_HERE"
+```
 
-1. Trien khai Auth module (JWT), cap nhat lai `SecurityConfig`
-2. Trien khai module Budget theo pattern cua Itinerary
-3. Trien khai module Collaboration voi WebSocket + STOMP
-4. Trien khai module Booking voi Adapter Pattern (FakeBookingProvider)
-5. Nang cap co che goi y diem den: them buoc vector search bang
-   `pgvector` (embedding mo ta diem den) truoc buoc loc cung hien tai
-6. Viet unit test cho service layer (JUnit + Mockito)
-7. Them Flyway/Liquibase de quan ly migration thay vi `ddl-auto: update`
+### 3. Start the Backend
+```bash
+./mvnw spring-boot:run
+```
+*(The backend runs on `http://localhost:8080`)*
+
+### 4. Start the Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+*(The frontend runs on `http://localhost:5173`)*
+
+## 📚 Technical Highlights
+- **Adapter Pattern:** Used in the `Booking` module to dynamically inject providers (`FakeFlightProvider`, `FakeHotelProvider`) conforming to the Open/Closed Principle.
+- **Traveling Salesperson Problem (TSP):** Handled via `OpenRouteService` VROOM API, with a robust mathematical fallback (Nearest Neighbor + Haversine formula) written in pure Java.
+- **AI Recommendation Engine:** A 3-step pipeline combining Hard Filters (Budget/Date) -> Vector Semantic Search (pgvector) -> Collaborative Filtering (Cosine Similarity of User Preferences).
