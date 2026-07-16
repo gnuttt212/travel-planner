@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.lang.NonNull;
 
 /**
  * Cau hinh CORS va Interceptors cho Spring MVC.
@@ -16,7 +17,7 @@ public class WebConfig implements WebMvcConfigurer {
     private final RateLimitInterceptor rateLimitInterceptor;
 
     @Override
-    public void addCorsMappings(CorsRegistry registry) {
+    public void addCorsMappings(@NonNull CorsRegistry registry) {
         registry.addMapping("/api/**")
                 .allowedOrigins("http://localhost:3000", "http://localhost:5173") // Cho phep Vite port (5173)
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE")
@@ -24,7 +25,7 @@ public class WebConfig implements WebMvcConfigurer {
     }
 
     @Override
-    public void addInterceptors(InterceptorRegistry registry) {
+    public void addInterceptors(@NonNull InterceptorRegistry registry) {
         // Dang ky Rate Limiter bao ve API ton kem
         registry.addInterceptor(rateLimitInterceptor)
                 .addPathPatterns("/api/v1/itineraries/generate", "/api/v1/routes/optimize");

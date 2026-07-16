@@ -3,6 +3,11 @@ spring:
     name: travel-planner
   profiles:
     active: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5433/travel_planner
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
   sql:
     init:
       mode: always

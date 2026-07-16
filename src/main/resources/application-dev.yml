@@ -1,5 +1,5 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/travel_planner
+    url: jdbc:postgresql://localhost:5433/travel_planner
     username: postgres
     password: postgres

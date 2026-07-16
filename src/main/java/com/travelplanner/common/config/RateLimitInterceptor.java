@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.lang.NonNull;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,7 +34,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     private final ConcurrentMap<String, Bucket> cache = new ConcurrentHashMap<>();
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         String uri = request.getRequestURI();
         
         // Chi apply rate limit cho cac endpoint ton kem (Gemini API, Mapbox TSP)
