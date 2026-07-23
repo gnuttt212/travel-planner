@@ -35,7 +35,7 @@ management:
         include: health,info
 
 jwt:
-  secret: ${JWT_SECRET:K7mZ9pQxR2vN8wLtF3jH5yB6cD1sA4eU0iO7gM2nX9k=}
+  secret: ${JWT_SECRET:change-me-in-production}
   expiration: 86400000
 
 gemini:
