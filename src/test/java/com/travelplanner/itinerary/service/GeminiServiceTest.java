@@ -13,11 +13,13 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class GeminiServiceTest {
@@ -39,10 +41,10 @@ class GeminiServiceTest {
 
     @Test
     void shouldReturnFallbackWhenExternalApiFails() {
-        when(restTemplate.postForObject(any(String.class), any(), eq(Map.class))).thenThrow(new RestClientException("boom"));
+        lenient().when(restTemplate.postForObject(any(String.class), any(), eq(Map.class))).thenThrow(new RestClientException("boom"));
 
         String result = geminiService.generateDetailedItinerary(
-                List.of(new DestinationResponse("id", "Paris", "France", "desc", null, null, null, null, null)),
+                List.of(new DestinationResponse("id", "Paris", "France", "desc", null, null, null, null, null, null)),
                 new UserPreference(),
                 "Clear"
         );
