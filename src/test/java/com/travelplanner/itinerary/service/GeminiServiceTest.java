@@ -44,10 +44,10 @@ class GeminiServiceTest {
         lenient().when(restTemplate.postForObject(any(String.class), any(), eq(Map.class))).thenThrow(new RestClientException("boom"));
 
         String result = geminiService.generateDetailedItinerary(
-                List.of(new DestinationResponse("id", "Paris", "France", "desc", null, null, null, null, null, null)),
-                new UserPreference(),
-                "Clear"
-        );
+        List.of(new DestinationResponse("id", "Paris", "France", "desc", null, null, null, null, null, null, null)),
+        new UserPreference(),
+        "Clear"
+    );
 
         assertTrue(result.contains("Unable to generate itinerary"));
     }
