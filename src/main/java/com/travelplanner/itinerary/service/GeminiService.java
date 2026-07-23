@@ -30,9 +30,17 @@ public class GeminiService {
     private final ObjectMapper objectMapper;
 
     public String generateDetailedItinerary(List<DestinationResponse> topDestinations, UserPreference userPreference, String weatherContext) {
-        RestTemplate restTemplate = new RestTemplate();
-
         String prompt = buildPrompt(topDestinations, userPreference, weatherContext);
+        return callGeminiApi(prompt);
+    }
+
+    public String replanItinerary(String originalItinerary, String eventType, String eventDetails, String weatherContext) {
+        String prompt = buildReplanPrompt(originalItinerary, eventType, eventDetails, weatherContext);
+        return callGeminiApi(prompt);
+    }
+
+    private String callGeminiApi(String prompt) {
+        RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -89,6 +97,30 @@ public class GeminiService {
         }
         
         prompt.append("\nPlease format the itinerary clearly with Day 1, Day 2, Day 3 headings and detailed activities.");
+        return prompt.toString();
+    }
+
+    private String buildReplanPrompt(String originalItinerary, String eventType, String eventDetails, String weatherContext) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("You are an expert travel planner AI.\n");
+        prompt.append("The user has an existing travel itinerary, but an unexpected event has occurred, requiring an adaptive re-planning.\n\n");
+        
+        prompt.append("--- ORIGINAL ITINERARY ---\n");
+        prompt.append(originalItinerary).append("\n\n");
+        
+        prompt.append("--- EVENT DETAIL ---\n");
+        prompt.append("Event Type: ").append(eventType).append("\n");
+        prompt.append("Details: ").append(eventDetails).append("\n\n");
+        
+        if (weatherContext != null && weatherContext.toLowerCase().contains("rain")) {
+            prompt.append("⚠️ WEATHER ALERT: ").append(weatherContext).append("\n");
+            prompt.append("IMPORTANT: Rain is expected. You MUST prioritize indoor activities or provide rain contingency plans.\n\n");
+        } else if (weatherContext != null) {
+            prompt.append("Weather: ").append(weatherContext).append("\n\n");
+        }
+        
+        prompt.append("Please provide a REVISED itinerary. Keep the parts of the itinerary that are NOT affected by the event intact. ");
+        prompt.append("Only adjust the schedule/activities around the time of the event and explain briefly what was changed and why.");
         return prompt.toString();
     }
 

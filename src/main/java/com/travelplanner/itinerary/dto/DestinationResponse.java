@@ -13,6 +13,7 @@ public record DestinationResponse(
         BigDecimal avgCostPerDay,
         Double popularityScore,
         Double latitude,
-        Double longitude
+        Double longitude,
+        String recommendationReason
 ) {
 }

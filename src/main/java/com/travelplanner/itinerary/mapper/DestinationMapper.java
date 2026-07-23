@@ -35,7 +35,8 @@ public class DestinationMapper {
                 entity.getAvgCostPerDay(),
                 entity.getPopularityScore(),
                 entity.getLatitude(),
-                entity.getLongitude()
+                entity.getLongitude(),
+                null // recommendationReason will be populated by the service if needed
         );
     }
 }

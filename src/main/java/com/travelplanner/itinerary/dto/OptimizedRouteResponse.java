@@ -15,4 +15,5 @@ public class OptimizedRouteResponse {
     private List<WaypointDto> optimizedOrder;
     private double totalDurationMinutes;
     private double totalDistanceKm;
+    private double carbonEmissionKg;
 }
