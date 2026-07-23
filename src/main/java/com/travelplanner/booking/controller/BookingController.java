@@ -1,8 +1,8 @@
 package com.travelplanner.booking.controller;
 
+import com.travelplanner.booking.api.BookingApi;
 import com.travelplanner.booking.domain.BookingRequest;
 import com.travelplanner.booking.domain.BookingResult;
-import com.travelplanner.booking.service.BookingService;
 import com.travelplanner.common.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BookingController {
 
-    private final BookingService bookingService;
+    private final BookingApi bookingService;
 
     @PostMapping
     public ApiResponse<BookingResult> book(@RequestBody BookingRequest request) {
