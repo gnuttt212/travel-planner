@@ -53,10 +53,20 @@ public class DestinationServiceImpl implements DestinationService {
         if (prefOpt.isPresent() && prefOpt.get().getPreferenceVector() != null) {
             String vectorStr = prefOpt.get().getPreferenceVector();
             // C = 10 (min reviews), m = 4.0 (avg rating) for Bayesian calc
-            return destinationRepository.findRecommendedDestinationsNative(
-                    maxBudgetPerDay, travelMonth, vectorStr, 10.0, 4.0, 5)
-                    .stream()
-                    .map(destinationMapper::toResponse)
+            List<Destination> recommended = destinationRepository.findRecommendedDestinationsNative(
+                    maxBudgetPerDay, travelMonth, vectorStr, 10.0, 4.0, 5);
+            
+            return recommended.stream()
+                    .map(dest -> {
+                        DestinationResponse response = destinationMapper.toResponse(dest);
+                        String reason = generateRecommendationReason(dest, prefOpt.get());
+                        return new DestinationResponse(
+                                response.id(), response.name(), response.country(), response.description(),
+                                response.tags(), response.bestMonths(), response.avgCostPerDay(),
+                                response.popularityScore(), response.latitude(), response.longitude(),
+                                reason
+                        );
+                    })
                     .toList();
         }
         
@@ -93,5 +103,20 @@ public class DestinationServiceImpl implements DestinationService {
     private Destination findEntityOrThrow(String id) {
         return destinationRepository.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.of("Destination", id));
+    }
+
+    private String generateRecommendationReason(Destination dest, UserPreference pref) {
+        if (dest.getTags() == null || pref.getTagWeights() == null) {
+            return "Được đề xuất qua thuật toán AI phân tích tương đồng sở thích của bạn.";
+        }
+        
+        List<String> matchingTags = dest.getTags().stream()
+                .filter(tag -> pref.getTagWeights().containsKey(tag))
+                .toList();
+                
+        if (!matchingTags.isEmpty()) {
+            return "Được đề xuất vì bạn thích các yếu tố: " + String.join(", ", matchingTags) + ".";
+        }
+        return "Được đề xuất qua thuật toán AI phân tích tương đồng sở thích của bạn.";
     }
 }

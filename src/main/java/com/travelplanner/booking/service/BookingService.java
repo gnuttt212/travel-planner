@@ -1,5 +1,6 @@
 package com.travelplanner.booking.service;
 
+import com.travelplanner.booking.api.BookingApi;
 import com.travelplanner.booking.domain.BookingProvider;
 import com.travelplanner.booking.domain.BookingRequest;
 import com.travelplanner.booking.domain.BookingResult;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
  * moi implement BookingProvider, khong can sua BookingService (Open/Closed Principle).
  */
 @Service
-public class BookingService {
+public class BookingService implements BookingApi {
 
     private final Map<String, BookingProvider> providerMap;
 
@@ -31,6 +32,7 @@ public class BookingService {
                 .collect(Collectors.toMap(BookingProvider::getProviderType, Function.identity()));
     }
 
+    @Override
     public BookingResult book(BookingRequest request) {
         BookingProvider provider = providerMap.get(request.getProviderType());
         if (provider == null) {
@@ -39,6 +41,7 @@ public class BookingService {
         return provider.book(request);
     }
 
+    @Override
     public List<String> getAvailableProviders() {
         return List.copyOf(providerMap.keySet());
     }

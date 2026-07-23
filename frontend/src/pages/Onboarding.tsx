@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import api from '../api';
 
 const Onboarding: React.FC = () => {
@@ -10,6 +12,23 @@ const Onboarding: React.FC = () => {
   const [travelStyle, setTravelStyle] = useState('Relaxing');
   const [groupType, setGroupType] = useState('Solo');
   const navigate = useNavigate();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    // Animate the step container sliding in
+    gsap.fromTo(".onboarding-step", 
+      { x: 50, opacity: 0 }, 
+      { x: 0, opacity: 1, duration: 0.5, ease: "power2.out" }
+    );
+    
+    // Stagger the tag buttons if we are on step 1
+    if (step === 1) {
+      gsap.fromTo(".tag-btn", 
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: "back.out(1.7)", delay: 0.1 }
+      );
+    }
+  }, { scope: containerRef, dependencies: [step] });
 
   const handleTagToggle = (tag: string) => {
     setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
@@ -33,7 +52,7 @@ const Onboarding: React.FC = () => {
   };
 
   return (
-    <div className="onboarding-container">
+    <div className="onboarding-container" ref={containerRef}>
       <div className="step-indicator">Step {step} of 4</div>
       
       {step === 1 && (

@@ -39,7 +39,7 @@ public class OpenRouteService {
      */
     public OptimizedRouteResponse optimizeRoute(List<WaypointDto> waypoints) {
         if (waypoints == null || waypoints.size() < 2) {
-            return new OptimizedRouteResponse(waypoints, 0.0, 0.0);
+            return new OptimizedRouteResponse(waypoints, 0.0, 0.0, 0.0);
         }
 
         if (apiKey == null || apiKey.contains("YOUR_ORS_API_KEY_HERE")) {
@@ -132,7 +132,8 @@ public class OpenRouteService {
                     optimized.add(originalWaypoints.get(jobId - 1));
                 }
             }
-            return new OptimizedRouteResponse(optimized, distanceKm, durationMins);
+            double carbonEmissionKg = distanceKm * 0.12; // 0.12 kg/km for driving
+            return new OptimizedRouteResponse(optimized, durationMins, distanceKm, carbonEmissionKg);
         }
 
         return nearestNeighborFallback(originalWaypoints);
@@ -168,7 +169,9 @@ public class OpenRouteService {
             current = nearest;
         }
 
-        return new OptimizedRouteResponse(optimized, totalDistance, totalDistance * 1.5); // Estimate 1.5 min per km
+        double durationMins = totalDistance * 1.5; // Estimate 1.5 min per km
+        double carbonEmissionKg = totalDistance * 0.12; // 0.12 kg/km for driving
+        return new OptimizedRouteResponse(optimized, durationMins, totalDistance, carbonEmissionKg);
     }
 
     private double haversine(double lat1, double lon1, double lat2, double lon2) {
