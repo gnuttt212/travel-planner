@@ -54,5 +54,8 @@ Thư mục này lưu trữ các quyết định kiến trúc cho dự án Travel
 - [ADR-031](ADR-031-chon-enterprise-readiness-va-governance.md): Chọn enterprise readiness và governance cho hệ thống
 - [ADR-032](ADR-032-chon-workflow-approval-cho-adr-va-thay-doi-kien-truc.md): Chọn workflow approval cho ADR và thay đổi kiến trúc
 
+### 7. Tái cấu trúc Phase 1 MVP
+- [ADR-033](ADR-033-don-gian-hoa-kien-truc-cho-mvp.md): Đơn giản hóa kiến trúc, vô hiệu hóa các ADR cũ (ADR-003, ADR-008, ADR-013, ADR-025, ADR-026, ADR-030) và thay đổi Core Engine thành Scoring Engine nội bộ cho Phase 1 MVP.
+
 ## Tài liệu liên quan
 - [Architecture Overview](../architecture-overview.md)
