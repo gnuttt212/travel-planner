@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import lombok.Builder;
+
+@Builder
 public record TravelContext(
     TripPurpose purpose,
     LocalDate date,

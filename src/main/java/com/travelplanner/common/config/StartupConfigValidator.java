@@ -26,8 +26,9 @@ public class StartupConfigValidator {
         require("spring.datasource.username", missing);
         require("spring.datasource.password", missing);
 
+        validateOrsApiKey();
+
         // Phase 2: uncomment when integrated
-        // require("ors.api.key", missing);
         // require("openweathermap.api.key", missing);
         // Phase 3: uncomment when integrated
         // require("gemini.api.key", missing);
@@ -41,6 +42,13 @@ public class StartupConfigValidator {
         String value = environment.getProperty(property);
         if (value == null || value.isBlank()) {
             missing.add(property);
+        }
+    }
+
+    private void validateOrsApiKey() {
+        String orsKey = environment.getProperty("ors.api.key");
+        if (orsKey == null || orsKey.trim().isEmpty() || orsKey.startsWith("${")) {
+            System.err.println("WARNING: ORS_API_KEY is not configured. System will fallback to Haversine distance calculation.");
         }
     }
 }

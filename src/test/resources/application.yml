@@ -11,3 +11,4 @@ spring:
 
 jwt:
   secret: "test-secret-key-for-unit-tests-only-1234567890"
+  expiration: 86400000

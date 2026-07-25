@@ -11,6 +11,12 @@ import java.util.stream.Collectors;
 @Component
 public class SlotAllocator {
     
+    private final com.travelplanner.recommendation.integration.OpenRouteServiceClient orsClient;
+    
+    public SlotAllocator(com.travelplanner.recommendation.integration.OpenRouteServiceClient orsClient) {
+        this.orsClient = orsClient;
+    }
+    
     // Estimated duration per category (minutes)
     private static final Map<DestinationCategory, Integer> DURATION_MAP = Map.of(
         DestinationCategory.CAFE, 75,
@@ -64,13 +70,20 @@ public class SlotAllocator {
             if (isMealTime && !hasMeal && !isRestaurant) continue; // skip non-food during meal time
             if (isRestaurant) hasMeal = true;
             
-            // Calculate travel time from previous activity (estimate)
+            // Calculate travel time from previous activity
             int travelMinutes = 15; // default 15 min travel buffer
             double travelKm = 0;
             if (!activities.isEmpty()) {
                 TripActivity prev = activities.get(activities.size() - 1);
-                travelKm = haversineKm(prev.getDestinationLat(), prev.getDestinationLon(), dest.getLatitude(), dest.getLongitude());
-                travelMinutes = estimateTravelMinutes(travelKm, ctx.transportation());
+                try {
+                    var info = orsClient.getRoute(prev.getDestinationLat(), prev.getDestinationLon(), dest.getLatitude(), dest.getLongitude(), ctx.transportation());
+                    travelKm = info.distanceKm();
+                    travelMinutes = info.durationMinutes();
+                } catch (Exception e) {
+                    // Fallback to Haversine
+                    travelKm = haversineKm(prev.getDestinationLat(), prev.getDestinationLon(), dest.getLatitude(), dest.getLongitude());
+                    travelMinutes = estimateTravelMinutes(travelKm, ctx.transportation());
+                }
             }
             
             LocalTime actStart = current.plusMinutes(activities.isEmpty() ? 0 : travelMinutes);

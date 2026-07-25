@@ -44,11 +44,11 @@ jwt:
 #     key: ${GEMINI_API_KEY:}
 #     url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
-# --- Reserved for Phase 2 — not yet integrated ---
-# ors:
-#   api:
-#     key: ${ORS_API_KEY:}
-#     url: "https://api.openrouteservice.org"
+# OpenRouteService (Phase 2 - Active)
+ors:
+  api:
+    url: "https://api.openrouteservice.org"
+    key: ${ORS_API_KEY}
 
 # --- Reserved for Phase 2 — not yet integrated ---
 # openweathermap:
