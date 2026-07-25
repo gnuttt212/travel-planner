@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Login from './pages/Login';
-import Onboarding from './pages/Onboarding';
-import Destinations from './pages/Destinations';
-import Planner from './pages/Planner';
+import ContextCards from './pages/ContextCards';
+import Results from './pages/Results';
+import TripDetail from './pages/TripDetail';
+import MyTrips from './pages/MyTrips';
 import './index.css';
 
 function App() {
@@ -18,28 +19,25 @@ function App() {
   return (
     <Router>
       <div className="app-container">
-        <nav className="navbar">
-          <h1>TravelPlanner AI</h1>
+        <nav className="navbar glass-panel">
+          <h1>🌍 TravelPlanner AI</h1>
           {token && (
             <div className="nav-links">
-              <Link to="/onboarding">Onboarding</Link>
-              <Link to="/destinations">Explore</Link>
-              <Link to="/planner">Planner</Link>
-              <button onClick={handleLogout}>Logout</button>
+              <Link to="/plan/new">Lên kế hoạch</Link>
+              <Link to="/trips">Chuyến đi của tôi</Link>
+              <button onClick={handleLogout}>Đăng xuất</button>
             </div>
           )}
         </nav>
 
         <main className="main-content">
           <Routes>
-            <Route
-              path="/login"
-              element={<Login onLoginSuccess={() => setToken(localStorage.getItem('token'))} />}
-            />
-            <Route path="/onboarding" element={token ? <Onboarding /> : <Navigate to="/login" />} />
-            <Route path="/destinations" element={token ? <Destinations /> : <Navigate to="/login" />} />
-            <Route path="/planner" element={token ? <Planner /> : <Navigate to="/login" />} />
-            <Route path="/" element={<Navigate to={token ? "/destinations" : "/login"} />} />
+            <Route path="/login" element={<Login onLoginSuccess={() => setToken(localStorage.getItem('token'))} />} />
+            <Route path="/plan/new" element={token ? <ContextCards /> : <Navigate to="/login" />} />
+            <Route path="/plan/results" element={token ? <Results /> : <Navigate to="/login" />} />
+            <Route path="/trip/:id" element={token ? <TripDetail /> : <Navigate to="/login" />} />
+            <Route path="/trips" element={token ? <MyTrips /> : <Navigate to="/login" />} />
+            <Route path="/" element={<Navigate to={token ? "/plan/new" : "/login"} />} />
           </Routes>
         </main>
       </div>
