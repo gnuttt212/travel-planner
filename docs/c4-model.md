@@ -1,8 +1,8 @@
-# C4 Model for Travel Planner
+# C4 Model for Travel Planner MVP
 
 ## Mục đích
 
-Tài liệu này trình bày kiến trúc hệ thống theo mô hình C4, từ mức hệ thống doanh nghiệp đến mức thành phần chi tiết.
+Tài liệu này trình bày kiến trúc hệ thống của Travel Planner MVP theo mô hình C4 (Context, Container, Component).
 
 ## 1. Context Diagram
 
@@ -11,9 +11,11 @@ flowchart LR
     Traveler[Traveler] --> TravelPlanner[Travel Planner Application]
     TravelPlanner --> PostgreSQL[(PostgreSQL)]
     TravelPlanner --> Redis[(Redis)]
-    TravelPlanner --> Gemini[Gemini AI]
-    TravelPlanner --> Weather[OpenWeatherMap]
-    TravelPlanner --> ORS[OpenRouteService]
+    
+    subgraph Phase 2 Integrations
+        TravelPlanner -.-> Weather[OpenWeatherMap]
+        TravelPlanner -.-> ORS[OpenRouteService]
+    end
 ```
 
 ## 2. Container Diagram
@@ -21,18 +23,14 @@ flowchart LR
 ```mermaid
 flowchart TB
     subgraph Client
-        Web[React Web App]
+        Web[React Web App\nContextCards, Timeline, Map]
     end
 
     subgraph Server
         API[Spring Boot API]
-        WS[WebSocket Service]
-        Auth[Auth Module]
-        Itinerary[Itinerary Module]
-        Budget[Budget Module]
-        Collaboration[Collaboration Module]
-        Booking[Booking Module]
-        Interaction[Interaction Module]
+        Identity[Identity Module]
+        Planning[Planning Module]
+        Recommendation[Recommendation Module]
     end
 
     subgraph Data
@@ -41,56 +39,40 @@ flowchart TB
     end
 
     Web --> API
-    Web --> WS
-    API --> Auth
-    API --> Itinerary
-    API --> Budget
-    API --> Collaboration
-    API --> Booking
-    API --> Interaction
-    Collaboration --> WS
+    API --> Identity
+    API --> Planning
+    API --> Recommendation
+    
+    Recommendation --> Planning
+    
     API --> PG
     API --> RD
 ```
 
-## 3. Component Diagram
+## 3. Component Diagram (Recommendation Module)
 
-### Backend Components
+Phân tích sâu vào trái tim của hệ thống: Module `recommendation`.
 
-- Authentication Component
-  - xử lý login, JWT, refresh token
-- Itinerary Component
-  - quản lý plan, destinations, route optimization
-- Budget Component
-  - theo dõi chi phí và thống kê
-- Collaboration Component
-  - đồng bộ real-time và chia sẻ chuyến đi
-- Booking Component
-  - tích hợp provider cho đặt chỗ
-- Interaction Component
-  - phản hồi người dùng và gợi ý
+```mermaid
+flowchart TD
+    RecommendationService[Recommendation Service]
+    ScoringEngine[Scoring Engine\n- Rating\n- Distance\n- Hours\n- Preference\n- Budget]
+    SlotAllocator[Slot Allocator]
+    PlanBuilder[Plan Builder]
+    DestRepo[(Destination Repository)]
+    
+    RecommendationService --> DestRepo
+    RecommendationService --> ScoringEngine
+    RecommendationService --> SlotAllocator
+    RecommendationService --> PlanBuilder
+```
 
-### Data Components
+## 4. Ghi chú Kiến trúc
 
-- Repository Layer
-- Domain Model Layer
-- Service Layer
-- DTO / Mapper Layer
-
-## 4. Code-Level Note
-
-Tại mức code, hệ thống được tổ chức theo domain-driven structure, với các module nghiệp vụ rõ ràng và các tầng controller/service/repository. Đây là nền tảng để mở rộng theo hướng modular monolith hoặc phân tách service sau này.
-
-## 5. Architectural Goals
-
-- Tách biệt rõ các domain nghiệp vụ
-- Tăng khả năng mở rộng và bảo trì
-- Hỗ trợ real-time collaboration
-- Hỗ trợ AI và dịch vụ bên ngoài
-- Tạo nền tảng cho microservice hóa trong tương lai
+- Hệ thống hiện tại áp dụng kiến trúc Modular Monolith tinh gọn, loại bỏ các domain phức tạp chưa cần thiết (WebSocket, Booking, Microservices) để tập trung vào giá trị cốt lõi (Core Value) là thuật toán sinh lịch trình thông minh.
+- Phù hợp cho MVP Portfolio.
 
 ## Tài liệu liên quan
 
 - [Architecture Overview](architecture-overview.md)
 - [System Context Diagram](system-context-diagram.md)
-- [ADR Index](adr/README.md)

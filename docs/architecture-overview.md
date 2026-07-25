@@ -2,108 +2,50 @@
 
 ## Mục đích
 
-Tài liệu này cung cấp một bản tổng hợp kiến trúc cấp cao cho dự án Travel Planner, dựa trên các quyết định đã ghi nhận trong thư mục ADR. Mục tiêu là giúp các thành viên hiểu được cấu trúc hệ thống, các thành phần chính, mối quan hệ giữa chúng và hướng phát triển lâu dài của dự án.
+Tài liệu này cung cấp một bản tổng hợp kiến trúc cấp cao cho dự án Travel Planner MVP, phản ánh các thay đổi trong Phase 1. 
 
 ## 1. Tổng quan hệ thống
 
-Travel Planner là một ứng dụng hỗ trợ lên kế hoạch du lịch thông minh, kết hợp frontend hiện đại, backend theo kiến trúc Modular Monolith và các dịch vụ bên ngoài như AI, thời tiết và bản đồ.
+Travel Planner MVP là một ứng dụng hỗ trợ lên kế hoạch du lịch thông minh, tập trung vào trải nghiệm người dùng tối ưu (Context Cards) và thuật toán gợi ý (Scoring Engine) đa biến.
 
 Hệ thống được thiết kế theo các nguyên tắc chính:
-
-- dễ phát triển và bảo trì;
-- có thể mở rộng theo thời gian;
-- có mức độ bảo mật phù hợp cho môi trường production;
-- hỗ trợ tích hợp AI và dịch vụ bên ngoài;
-- có thể chuyển dần sang kiến trúc phân tán hơn khi cần.
+- Tinh gọn và tập trung vào các domain cốt lõi.
+- Dễ phát triển, bảo trì và kiểm thử.
+- Thuật toán rõ ràng, có thể giải thích được thay vì phụ thuộc hoàn toàn vào Black-box AI.
+- Sẵn sàng tích hợp API bên thứ 3 trong các Phase tiếp theo.
 
 ## 2. Kiến trúc cấp cao
 
 ### Frontend
-
-- React + Vite + TypeScript
-- Giao diện gồm các màn hình chính như đăng nhập, onboarding, danh sách điểm đến và planner
-- Tương tác với backend thông qua REST API và WebSocket
+- **React 19 + Vite 8 + TypeScript**
+- **Giao diện**: Flow thu thập thông tin dạng Context Cards (GSAP animations), bản đồ Leaflet, và Timeline View.
+- Tương tác với backend thông qua REST API (sử dụng Axios với JWT interceptor).
 
 ### Backend
+- **Spring Boot 4.1.0**
+- **Kiến trúc Modular Monolith** với 3 domain nghiệp vụ chính:
+  1. `identity`: Xử lý xác thực (Auth), User, và Preferences.
+  2. `planning`: Quản lý các entities cốt lõi như Trip, TripActivity, và TravelContext.
+  3. `recommendation`: Trái tim thuật toán, chứa ScoringEngine, SlotAllocator và logic sinh kế hoạch.
 
-- Spring Boot 3
-- Kiến trúc Modular Monolith
-- Các domain nghiệp vụ được tách rõ như user, itinerary, budget, collaboration, booking và interaction
-- Mỗi domain có cấu trúc tầng logic rõ ràng: controller, service, repository, domain model, DTO
+### Data Layer
+- **PostgreSQL 16**: Lưu trữ toàn bộ dữ liệu nghiệp vụ (Trips, Destinations).
+- **Redis 7**: Cache và Rate Limiting (Bucket4j).
 
-### Data layer
+## 3. Luồng nghiệp vụ chính (Trip Planning Flow)
 
-- PostgreSQL làm cơ sở dữ liệu chính cho dữ liệu nghiệp vụ
-- pgvector dùng cho tìm kiếm ngữ nghĩa và gợi ý điểm đến
-- Redis dùng cho cache và rate limiting
-- Docker Compose dùng để chuẩn hóa môi trường phát triển
-
-### External integrations
-
-- Google Gemini cho AI generation và recommendation
-- OpenWeatherMap cho dự báo thời tiết
-- OpenRouteService cho tối ưu tuyến đường
-
-## 3. Luồng nghiệp vụ chính
-
-### Authentication
-
-- Người dùng đăng nhập qua JWT
-- Access token dùng cho request ngắn hạn
-- Refresh token dùng để duy trì phiên làm việc an toàn hơn
-
-### Trip planning
-
-- Người dùng tạo hoặc chỉnh sửa kế hoạch du lịch
-- Backend xử lý dữ liệu itinerary, budget và collaboration
-- Các dịch vụ AI và mapping có thể được kích hoạt để tạo gợi ý hoặc tối ưu tuyến đường
-
-### Collaboration
-
-- Nhiều người dùng có thể cùng làm việc trên một kế hoạch
-- WebSocket dùng để đồng bộ trạng thái thời gian thực
-- Event-driven pattern có thể được dùng cho các luồng phản ứng và notification
-
-### Export
-
-- Kế hoạch có thể được xuất sang PDF hoặc ICS
-- Điều này hỗ trợ chia sẻ, in ấn hoặc thêm vào lịch cá nhân
+1. **Thu thập bối cảnh (Context Collection)**: Người dùng nhập thông tin qua 5 bước (Mục đích, Thời gian, Nhóm, Ngân sách, Vị trí).
+2. **Chấm điểm (Scoring)**: `ScoringEngine` đánh giá các điểm đến dựa trên 5 yếu tố: Rating, Khoảng cách (Distance), Giờ mở cửa (Hours), Sở thích (Preference), và Ngân sách (Budget).
+3. **Phân bổ (Allocation)**: `SlotAllocator` sắp xếp các điểm đến có điểm cao nhất vào khung giờ hợp lý.
+4. **Xây dựng kế hoạch (Plan Building)**: Trả về 3 phương án (Variants) cho người dùng lựa chọn (Balanced, Foodie, Saver).
 
 ## 4. Các mối quan tâm xuyên suốt
 
-### Security
-
-- Spring Security cho xác thực và phân quyền
-- JWT và refresh token để quản lý phiên
-- Rate limiting và secrets management để bảo vệ hệ thống
-
-### Reliability
-
-- Logging, monitoring và observability được thiết kế từ đầu
-- Backup và disaster recovery được xem là yêu cầu cần có cho môi trường production
-- CI/CD giúp tự động hóa build, test và deployment
-
-### Maintainability
-
-- ADR dùng để ghi lại quyết định kiến trúc
-- Cấu trúc domain-driven giúp mã nguồn rõ ràng và dễ mở rộng
-- Feature flags hỗ trợ release kiểm soát và rollout từng bước
-
-## 5. Hướng phát triển trong tương lai
-
-Hệ thống hiện tại được thiết kế để bắt đầu theo hướng Modular Monolith, nhưng có thể evolve theo lộ trình sau:
-
-1. Giữ Modular Monolith cho giai đoạn đầu
-2. Dùng API Gateway khi hệ thống có nhiều service hơn
-3. Tách dần một số domain thành service riêng nếu cần scale độc lập
-4. Mở rộng sang multi-tenancy khi phục vụ doanh nghiệp hoặc khách hàng B2B
-
-## 6. Kết luận
-
-Kiến trúc hiện tại của Travel Planner tập trung vào sự cân bằng giữa tốc độ phát triển, tính bảo trì, bảo mật và khả năng mở rộng. Đây là một kiến trúc phù hợp cho MVP và nền tảng sản phẩm trong giai đoạn đầu, đồng thời có thể phát triển thành một hệ thống lớn hơn khi nhu cầu tăng lên.
+- **Security**: JWT Stateless Authentication & BCrypt.
+- **Maintainability**: Code được chia theo domain-driven (identity, planning, recommendation), giảm bớt sự liên kết chồng chéo.
+- **Performance**: Thuật toán tính toán trực tiếp trên memory sau khi load các candidate, đảm bảo tốc độ phản hồi < 2s.
 
 ## Tài liệu liên quan
 
 - [System Context Diagram](system-context-diagram.md)
 - [C4 Model](c4-model.md)
-- [ADR Index](adr/README.md)
