@@ -35,7 +35,7 @@
 
 ---
 
-## Phase 2 — Deploy Public + Tích hợp Routing & Thời tiết
+## Phase 2 — Deploy Public + Tích hợp Routing & Thời tiết ✅ DONE
 
 **Mục tiêu:** Đưa ứng dụng lên môi trường public để test được thật, thay Haversine bằng khoảng cách đường đi thật.
 
@@ -133,6 +133,7 @@ Danh sách các vấn đề kỹ thuật cần xử lý, sắp theo mức ưu ti
 | 8 | `Destination.getTagList()` tạo `ObjectMapper` mới mỗi lần gọi — cần inject hoặc cache | Thấp | Phase 4 |
 | 9 | Hibernate `ddl-auto: update` — cần chuyển sang Flyway/Liquibase migration trước production | Cao | Phase 2 |
 | 10 | Chưa có logging/monitoring (OpenTelemetry, structured logging) | Trung bình | Phase 5 |
+| 11 | Chuyển từ `RestTemplate` sang `RestClient` (HTTP Client mới của Spring) cho `OpenRouteServiceClient` | Thấp | Phase 5 |
 
 ---
 
@@ -140,7 +141,7 @@ Danh sách các vấn đề kỹ thuật cần xử lý, sắp theo mức ưu ti
 
 ```
 Phase 1 (MVP)         ██████████████████████ DONE
-Phase 2 (Deploy+API)  ░░░░░░░░░░  ~1.5 tuần
+Phase 2 (Deploy+API)  ██████████████████████ DONE
 Phase 3 (Gemini)      ░░░░░░      ~1 tuần
 Phase 4 (DnD+Export)  ░░░░░░░░░░  ~1.5 tuần
 Phase 5 (Real Data)   ░░░░░░░░░░░░░░ ~2 tuần
