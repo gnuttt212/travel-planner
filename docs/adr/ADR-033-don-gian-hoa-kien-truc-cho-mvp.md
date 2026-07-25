@@ -1,53 +1,55 @@
-# ADR 033: Đơn giản hóa kiến trúc và thay đổi Core Engine cho Phase 1 MVP
+# ADR-033: Đơn giản hóa kiến trúc và thay đổi Core Engine cho Phase 1 MVP
 
-## Trạng thái
+- Date: 2026-07-25
+- Status: Accepted
+- Authors: Development Team
 
-**Được chấp thuận (Accepted)**
+## Context
 
-## Bối cảnh
+Trong quá trình phát triển ban đầu, hệ thống Travel Planner được thiết kế với tham vọng rất lớn: tích hợp AI (Google Gemini) để sinh lịch trình thông qua kỹ thuật RAG, sử dụng Vector Database (pgvector) để tìm kiếm ngữ nghĩa, và hỗ trợ cộng tác thời gian thực (WebSocket).
 
-Trong quá trình phát triển ban đầu, hệ thống Travel Planner được thiết kế với rất nhiều tính năng phức tạp như: Sinh lịch trình bằng AI RAG (Google Gemini), tìm kiếm Vector Search (pgvector), cộng tác thời gian thực (WebSocket), và nhiều module phân tán (booking, budget, collaboration, interaction).
+Tuy nhiên, đối với mục tiêu của Phase 1 (Minimum Viable Product - MVP) hướng tới một sản phẩm Startup Portfolio trong thời gian ngắn, kiến trúc trên bộc lộ nhiều điểm yếu:
+1. Độ trễ cao và thiếu ổn định khi phụ thuộc vào dịch vụ LLM của bên thứ ba (Black-box AI). Hệ thống khó can thiệp sâu vào thuật toán xếp lịch và điều chỉnh dữ liệu đầu ra.
+2. Chi phí duy trì hạ tầng (Vector DB, WebSocket) cao và phân tán tài nguyên phát triển thay vì tập trung vào trải nghiệm người dùng lõi.
+3. Số lượng module phân tán (`auth`, `user`, `booking`, `collaboration`, `interaction`, v.v.) làm phức tạp hóa quá trình phát triển.
 
-Tuy nhiên, đối với mục tiêu của Phase 1 (Minimum Viable Product - MVP) phục vụ cho Startup Portfolio trong thời gian ngắn (3-4 tháng), sự phức tạp này mang lại nhiều rủi ro:
-1. **Khó kiểm soát Output của LLM (Gemini)**: Việc sinh lịch trình bằng Prompt RAG thường khó đảm bảo định dạng JSON chuẩn xác 100% và khó tùy chỉnh sâu vào từng thuật toán sắp xếp của hệ thống.
-2. **Chi phí và Vận hành hạ tầng**: Việc duy trì Vector DB (pgvector), tạo Embedding liên tục và duy trì WebSocket làm tăng chi phí và sự phức tạp của quá trình triển khai.
-3. **Phân tán nguồn lực**: Việc phát triển các tính năng như Booking, Chat, hay Budget tracking làm lu mờ giá trị cốt lõi (Core Value) của ứng dụng là "Gợi ý và sắp xếp lịch trình du lịch thông minh".
+## Decision
 
-Do đó, chúng ta cần một đợt tái cấu trúc (Refactor) toàn diện để tinh gọn hệ thống.
+Chúng tôi quyết định thay đổi hoàn toàn kiến trúc lõi cho Phase 1 MVP:
 
-## Quyết định
+1. **Thay thế AI bằng Custom Scoring Engine**: Hủy bỏ việc gọi API Gemini và pgvector. Chuyển sang tự xây dựng `ScoringEngine` dựa trên thuật toán chấm điểm đa biến (Rating, Khoảng cách, Giờ mở cửa, Sở thích, Ngân sách) và `SlotAllocator` để tự động sắp xếp lịch trình.
+2. **Tinh gọn Module (Modular Monolith)**: Giảm từ hàng loạt module phức tạp xuống chỉ còn 3 module cốt lõi:
+   - `identity`: User, Auth, Preferences.
+   - `planning`: Trip, TripActivity, TravelContext.
+   - `recommendation`: Trái tim thuật toán (Scoring, Allocation).
+3. **Thay thế UI/UX**: Chuyển sang mô hình *Context Cards* (hỏi từng bước) thay vì form nhập liệu tĩnh để nâng cao trải nghiệm người dùng.
+4. **Vô hiệu hóa các tính năng nâng cao (Tạm thời)**: Đình chỉ WebSocket collaboration, Booking, và hệ thống theo dõi Budget.
 
-Chúng tôi quyết định thay đổi hoàn toàn kiến trúc của Phase 1 MVP như sau:
+Quyết định này chính thức vô hiệu hóa (Supersedes) các quyết định trước đó đối với Phase 1: ADR-003, ADR-008, ADR-013, ADR-025, ADR-026, ADR-030.
 
-1. **Thay thế AI bằng Custom Scoring Engine**: 
-   - Hủy bỏ việc sử dụng Google Gemini và RAG để sinh lịch trình.
-   - Hủy bỏ việc dùng `pgvector` và `sentence-transformers`.
-   - Thiết lập một thuật toán nội bộ (`ScoringEngine`) dựa trên 5 trọng số: Rating (Bayesian), Khoảng cách (Haversine), Thời gian mở cửa, Sở thích cá nhân và Ngân sách. Cùng với đó là `SlotAllocator` để tự động ghép các điểm đến vào các khung giờ phù hợp.
-2. **Giảm thiểu số lượng Module**: 
-   - Xóa bỏ toàn bộ các module: `auth`, `user`, `booking`, `collaboration`, `interaction`, `budget`.
-   - Gộp lại thành 3 module cốt lõi: 
-     - `identity` (User & Auth)
-     - `planning` (Trip & Context)
-     - `recommendation` (Scoring & Allocation)
-3. **Tạm ngưng các tính năng thời gian thực**: Xóa bỏ cấu hình WebSocket/STOMP. Tính năng cộng tác sẽ được xem xét lại ở các Phase sau.
-4. **Cải tiến UI/UX**: Chuyển sang mô hình nhập liệu dạng *Context Cards* từng bước để tăng cường trải nghiệm người dùng, thay vì dùng một form nhập liệu dài.
+## Consequences
 
-## Hệ quả
+### Positive
 
-**Tích cực:**
-- **Full Control**: Chúng ta kiểm soát 100% logic thuật toán lên lịch trình thay vì phụ thuộc vào một hộp đen (black-box) LLM. Dễ dàng tinh chỉnh và giải thích (Explainable AI).
-- **Tốc độ (Performance)**: Việc chấm điểm trên RAM và query Database truyền thống nhanh hơn và ổn định hơn rất nhiều so với việc gọi API LLM.
-- **Dễ bảo trì**: Codebase giảm từ hàng chục class phức tạp xuống chỉ còn các Domain và Engine cơ bản, dễ dàng cho một nhóm nhỏ (hoặc sinh viên) vận hành và trình bày (Pitching).
-- **Trải nghiệm người dùng tốt hơn**: Flow Context Cards mang lại cảm giác của một sản phẩm cao cấp.
+- **Full Control**: Kiểm soát 100% logic thuật toán lên lịch trình (Explainable AI), dễ dàng tinh chỉnh, gỡ lỗi.
+- **Performance**: Việc chấm điểm diễn ra trực tiếp trên RAM và PostgreSQL truyền thống mang lại tốc độ phản hồi cực nhanh.
+- **Maintainability**: Codebase giảm từ hàng chục domain phức tạp xuống kiến trúc tối giản, phù hợp cho quy mô nhóm nhỏ và bảo trì dài hạn.
 
-**Tiêu cực:**
-- Bỏ đi tính năng NLP (Nhập yêu cầu bằng ngôn ngữ tự nhiên) ban đầu. Người dùng phải chọn qua các option có sẵn.
-- Thuật toán `ScoringEngine` yêu cầu dữ liệu điểm đến (Destinations) phải cực kỳ chuẩn xác và đầy đủ (Tọa độ, Opening Hours, Cost) mới có thể hoạt động tốt.
+### Negative
 
-## Các ADR bị ảnh hưởng (Superseded/Deprecated)
+- Đánh đổi tính năng xử lý ngôn ngữ tự nhiên (NLP). Người dùng không thể gõ một câu mô tả dài mà phải tương tác qua UI cố định.
+- Thuật toán yêu cầu Database phải được làm sạch và chuẩn hóa cao độ (ví dụ: tọa độ chính xác, giờ mở cửa JSON chuẩn).
 
-Quyết định này chính thức **Vô hiệu hóa (Supersedes/Deprecates)** các quyết định sau đối với Phase 1:
-- **ADR-003**: Chọn PostgreSQL và pgvector (Bỏ pgvector).
-- **ADR-008**: Chọn WebSocket cho collaboration (Bỏ WebSocket).
-- **ADR-013**: Chọn AI Integration Strategy với Gemini (Bỏ Gemini).
-- Cùng với đó, đình chỉ vô thời hạn các ADR liên quan đến Enterprise/Microservices (ADR-025, ADR-026, ADR-030).
+## Alternatives considered
+
+### 1. Giữ nguyên Gemini AI (RAG)
+Mặc dù thông minh, nhưng AI thỉnh thoảng sinh ra lỗi JSON (hallucination) khiến Frontend bị crash. Hơn nữa, việc xếp lịch trình yêu cầu tính logic tuyến tính rất cao (thời gian di chuyển, giờ mở cửa), điều mà LLM hiện tại chưa xử lý hoàn hảo bằng các thuật toán lập trình truyền thống.
+
+### 2. Tách thành Microservices
+Tách `recommendation` ra một service Python riêng để tiện làm Machine Learning. Tuy nhiên, điều này phá vỡ ADR-002 (Modular Monolith) và tăng gấp đôi công sức DevOps, không phù hợp cho Phase 1.
+
+## Implementation Notes
+
+- Xóa toàn bộ code cũ liên quan đến `collaboration`, `booking`, `interaction`, `itinerary`.
+- Chuyển `application.yml` sang sử dụng DB chuẩn (PostgreSQL không cần pgvector extension).
+- Xây dựng `DataSeeder` mạnh mẽ để đảm bảo luôn có khoảng 50+ địa điểm thực tế tại TP.HCM kèm dữ liệu chuẩn để thuật toán có thể hoạt động hiệu quả khi review.
