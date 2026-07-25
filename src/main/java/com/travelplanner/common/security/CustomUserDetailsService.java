@@ -1,7 +1,7 @@
 package com.travelplanner.common.security;
 
-import com.travelplanner.auth.domain.User;
-import com.travelplanner.auth.repository.UserRepository;
+import com.travelplanner.identity.domain.User;
+import com.travelplanner.identity.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

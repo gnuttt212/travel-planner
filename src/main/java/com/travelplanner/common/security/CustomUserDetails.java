@@ -1,6 +1,6 @@
 package com.travelplanner.common.security;
 
-import com.travelplanner.auth.domain.User;
+import com.travelplanner.identity.domain.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
