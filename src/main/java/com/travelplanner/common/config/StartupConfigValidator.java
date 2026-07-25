@@ -25,9 +25,12 @@ public class StartupConfigValidator {
         require("spring.datasource.url", missing);
         require("spring.datasource.username", missing);
         require("spring.datasource.password", missing);
-        require("gemini.api.key", missing);
-        require("openweathermap.api.key", missing);
-        require("ors.api.key", missing);
+
+        // Phase 2: uncomment when integrated
+        // require("ors.api.key", missing);
+        // require("openweathermap.api.key", missing);
+        // Phase 3: uncomment when integrated
+        // require("gemini.api.key", missing);
 
         if (!missing.isEmpty()) {
             throw new IllegalStateException("Missing required production configuration: " + String.join(", ", missing));

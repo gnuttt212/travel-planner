@@ -37,8 +37,8 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         String uri = request.getRequestURI();
         
-        // Chi apply rate limit cho cac endpoint ton kem (Gemini API, Mapbox TSP)
-        if (uri.startsWith("/api/v1/itineraries/generate") || uri.startsWith("/api/v1/routes/optimize")) {
+        // Chi apply rate limit cho cac endpoint ton kem (Recommendation Engine)
+        if (uri.startsWith("/api/v1/planning/recommend") || uri.startsWith("/api/v1/trips")) {
             
             // Xac dinh user theo IP hoac user_id tu JWT
             String username = request.getUserPrincipal() != null ? request.getUserPrincipal().getName() : request.getRemoteAddr();

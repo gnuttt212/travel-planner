@@ -1,6 +1,5 @@
 package com.travelplanner.common.security;
 
-import com.travelplanner.auth.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.UserDetails;

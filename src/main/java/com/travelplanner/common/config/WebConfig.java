@@ -28,6 +28,6 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(@NonNull InterceptorRegistry registry) {
         // Dang ky Rate Limiter bao ve API ton kem
         registry.addInterceptor(rateLimitInterceptor)
-                .addPathPatterns("/api/v1/itineraries/generate", "/api/v1/routes/optimize");
+                .addPathPatterns("/api/v1/planning/recommend", "/api/v1/trips");
     }
 }
