@@ -104,7 +104,12 @@ export default function Results() {
             >
               <h3>{plan.variantName}</h3>
               <p className="variant-desc">{plan.variantDescription}</p>
-              <div className="variant-stats">
+              {plan.aiNarrative && (
+                <div className="ai-narrative" style={{ marginTop: '10px', fontSize: '0.9rem', color: '#e0e7ff', borderLeft: '3px solid #8b5cf6', paddingLeft: '10px', fontStyle: 'italic' }}>
+                  ✨ {plan.aiNarrative}
+                </div>
+              )}
+              <div className="variant-stats" style={{ marginTop: '15px' }}>
                 <div className="stat"><span>💰</span> {plan.totalCost.toLocaleString()}đ</div>
                 <div className="stat"><span>📍</span> {plan.activities.length} điểm</div>
                 <div className="stat"><span>🚗</span> {plan.totalDistanceKm.toFixed(1)} km</div>

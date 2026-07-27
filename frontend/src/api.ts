@@ -36,6 +36,7 @@ export interface TripActivity {
 export interface TripPlanResponse {
   variantName: string;
   variantDescription: string;
+  aiNarrative?: string;
   activities: TripActivity[];
   totalCost: number;
   totalDistanceKm: number;

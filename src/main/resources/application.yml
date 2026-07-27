@@ -48,13 +48,19 @@ jwt:
 ors:
   api:
     url: "https://api.openrouteservice.org"
-    key: ${ORS_API_KEY}
+    key: ${ORS_API_KEY:}
 
 # OpenWeatherMap (Phase 2 - Active)
 openweathermap:
   api:
     url: "https://api.openweathermap.org/data/2.5/forecast"
-    key: ${OPENWEATHERMAP_API_KEY}
+    key: ${OPENWEATHERMAP_API_KEY:}
+
+# Gemini AI (Phase 3 - Active)
+gemini:
+  api:
+    url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+    key: ${GEMINI_API_KEY:}
 
 rate-limit:
   requests-per-minute: 5

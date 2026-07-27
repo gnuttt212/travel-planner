@@ -28,6 +28,7 @@ public class StartupConfigValidator {
 
         validateOrsApiKey();
         validateOpenWeatherMapApiKey();
+        validateGeminiApiKey();
 
         // Phase 3: uncomment when integrated
         // require("gemini.api.key", missing);
@@ -55,6 +56,13 @@ public class StartupConfigValidator {
         String owmKey = environment.getProperty("openweathermap.api.key");
         if (owmKey == null || owmKey.trim().isEmpty() || owmKey.startsWith("${")) {
             System.err.println("WARNING: OPENWEATHERMAP_API_KEY is not configured. System will assume no rain (isRaining = false).");
+        }
+    }
+
+    private void validateGeminiApiKey() {
+        String geminiKey = environment.getProperty("gemini.api.key");
+        if (geminiKey == null || geminiKey.trim().isEmpty() || geminiKey.startsWith("${")) {
+            System.err.println("WARNING: GEMINI_API_KEY is not configured. AI narratives will fall back to empty strings.");
         }
     }
 }
