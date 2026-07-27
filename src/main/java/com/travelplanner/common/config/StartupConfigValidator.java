@@ -27,9 +27,8 @@ public class StartupConfigValidator {
         require("spring.datasource.password", missing);
 
         validateOrsApiKey();
+        validateOpenWeatherMapApiKey();
 
-        // Phase 2: uncomment when integrated
-        // require("openweathermap.api.key", missing);
         // Phase 3: uncomment when integrated
         // require("gemini.api.key", missing);
 
@@ -49,6 +48,13 @@ public class StartupConfigValidator {
         String orsKey = environment.getProperty("ors.api.key");
         if (orsKey == null || orsKey.trim().isEmpty() || orsKey.startsWith("${")) {
             System.err.println("WARNING: ORS_API_KEY is not configured. System will fallback to Haversine distance calculation.");
+        }
+    }
+
+    private void validateOpenWeatherMapApiKey() {
+        String owmKey = environment.getProperty("openweathermap.api.key");
+        if (owmKey == null || owmKey.trim().isEmpty() || owmKey.startsWith("${")) {
+            System.err.println("WARNING: OPENWEATHERMAP_API_KEY is not configured. System will assume no rain (isRaining = false).");
         }
     }
 }
