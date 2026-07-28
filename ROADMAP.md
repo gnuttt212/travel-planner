@@ -21,7 +21,7 @@
 | Frontend: MyTrips (danh sách chuyến đi) | ✅ |
 | Dark Theme / Glassmorphism CSS | ✅ |
 | JWT Authentication + BCrypt | ✅ |
-| Seed data: 52 địa điểm TP.HCM (mock, nhập tay — không từ API thật) | ✅ |
+| Seed data: 52 địa điểm TP.Hồ Chí Minh (mock, nhập tay — không từ API thật) | ✅ |
 | Rate Limiting (Bucket4j, 5 req/min) | ✅ |
 
 **Phụ thuộc:** Không cần API key bên ngoài. Chỉ cần Docker (PostgreSQL + Redis).
