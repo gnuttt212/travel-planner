@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -6,12 +6,12 @@ import { planningApi } from '../api';
 import type { TravelContextRequest } from '../api';
 
 const PURPOSES = [
-  { id: 'RELAX', label: 'Nghỉ dưỡng', icon: '🏖️' },
-  { id: 'FOOD', label: 'Ăn uống khám phá', icon: '🍜' },
+  { id: 'RELAXATION', label: 'Nghỉ dưỡng', icon: '🏖️' },
+  { id: 'FOOD_EXPLORE', label: 'Ăn uống khám phá', icon: '🍜' },
   { id: 'GROUP_FUN', label: 'Vui chơi nhóm', icon: '🎉' },
   { id: 'NATURE', label: 'Thiên nhiên', icon: '🌿' },
-  { id: 'CHECKIN', label: 'Check-in sống ảo', icon: '📸' },
-  { id: 'DATING', label: 'Hẹn hò', icon: '💖' },
+  { id: 'PHOTOGRAPHY', label: 'Check-in sống ảo', icon: '📸' },
+  { id: 'DATE', label: 'Hẹn hò', icon: '💖' },
 ];
 
 export default function ContextCards() {
@@ -20,8 +20,11 @@ export default function ContextCards() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
 
+  const [cities, setCities] = useState<string[]>([]);
+  const [citiesLoading, setCitiesLoading] = useState(true);
+
   const [formData, setFormData] = useState<Partial<TravelContextRequest>>({
-    purpose: '',
+    purpose: undefined,
     tripDate: new Date().toISOString().split('T')[0],
     duration: 'FULL_DAY',
     groupType: 'FRIENDS',
@@ -31,8 +34,20 @@ export default function ContextCards() {
     startLat: 16.0544,
     startLon: 108.2022,
     transportation: 'MOTORBIKE',
-    city: 'Đà Nẵng'
+    city: undefined
   });
+
+  useEffect(() => {
+    planningApi.getCities()
+      .then(res => {
+        setCities(res.data.data);
+      })
+      .catch(e => {
+        console.error('Không lấy được danh sách thành phố:', e);
+        setCities([]);
+      })
+      .finally(() => setCitiesLoading(false));
+  }, []);
 
   const updateForm = (key: keyof TravelContextRequest, value: any) => {
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -40,7 +55,42 @@ export default function ContextCards() {
 
   const { contextSafe } = useGSAP({ scope: containerRef });
 
+  const validateStep = (currentStep: number): string | null => {
+    switch (currentStep) {
+      case 0:
+        if (!formData.purpose) return 'Vui lòng chọn mục đích chuyến đi';
+        return null;
+      case 1:
+        if (!formData.tripDate) return 'Vui lòng chọn ngày đi';
+        if (!formData.duration) return 'Vui lòng chọn thời lượng chuyến đi';
+        return null;
+      case 2:
+        if (!formData.groupType) return 'Vui lòng chọn nhóm đi cùng';
+        if (formData.groupType !== 'SOLO' && (!formData.groupSize || formData.groupSize < 1)) {
+          return 'Số lượng người phải lớn hơn 0';
+        }
+        return null;
+      case 3:
+        if (!formData.budgetPerPerson || formData.budgetPerPerson <= 0) {
+          return 'Vui lòng nhập ngân sách hợp lệ';
+        }
+        return null;
+      case 4:
+        if (!formData.city) return 'Vui lòng chọn thành phố';
+        if (!formData.transportation) return 'Vui lòng chọn phương tiện di chuyển';
+        return null;
+      default:
+        return null;
+    }
+  };
+
   const nextStep = contextSafe(() => {
+    const error = validateStep(step);
+    if (error) {
+      alert(error);
+      return;
+    }
+
     if (step < 4) {
       gsap.to('.step-content', {
         x: '-20px',
@@ -77,13 +127,26 @@ export default function ContextCards() {
   });
 
   const handleSubmit = async () => {
+    for (let s = 0; s <= 4; s++) {
+      const error = validateStep(s);
+      if (error) {
+        alert(error);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const res = await planningApi.recommend(formData as TravelContextRequest);
       navigate('/plan/results', { state: { plans: res.data.data, context: formData } });
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('Có lỗi xảy ra khi tạo kế hoạch');
+      const msg =
+        e.response?.data?.message ||
+        e.message ||
+        'Có lỗi xảy ra khi tạo kế hoạch';
+      alert(msg);
+    } finally {
       setLoading(false);
     }
   };
@@ -185,7 +248,7 @@ export default function ContextCards() {
               <input 
                 type="number" 
                 value={formData.budgetPerPerson} 
-                onChange={(e) => updateForm('budgetPerPerson', parseInt(e.target.value))} 
+                onChange={(e) => updateForm('budgetPerPerson', parseInt(e.target.value) || 0)} 
                 className="glass-input"
               />
             </div>
@@ -197,26 +260,24 @@ export default function ContextCards() {
             <h2>Địa điểm & Di chuyển</h2>
             <div className="input-group">
               <label>Thành phố</label>
-              <div className="loc-input">
-                <input 
-                  type="text" 
-                  value={formData.city} 
-                  onChange={(e) => updateForm('city', e.target.value)} 
-                  className="glass-input"
-                  placeholder="Ví dụ: Đà Nẵng, Hà Nội..."
-                />
-                <button 
-                  className="glass-btn icon-btn" 
-                  onClick={() => {
-                    navigator.geolocation.getCurrentPosition(pos => {
-                      updateForm('startLat', pos.coords.latitude);
-                      updateForm('startLon', pos.coords.longitude);
-                      alert('Đã lấy vị trí hiện tại');
-                    });
-                  }}
-                  title="Lấy vị trí hiện tại"
-                >📍</button>
-              </div>
+              {citiesLoading ? (
+                <div className="loading-text">Đang tải danh sách thành phố...</div>
+              ) : cities.length === 0 ? (
+                <div className="auth-error">Không tải được danh sách thành phố. Vui lòng thử lại sau.</div>
+              ) : (
+                <div className="city-grid">
+                  {cities.map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`glass-btn ${formData.city === c ? 'active' : ''}`}
+                      onClick={() => updateForm('city', c)}
+                    >
+                      📍 {c}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <label className="mt-4 block">Phương tiện</label>
             <div className="transport-buttons">

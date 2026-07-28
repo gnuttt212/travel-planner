@@ -52,7 +52,7 @@ class ScoringEngineTest {
                 .openingHours("{\"friday\": \"08:00-16:00\"}")
                 .build();
 
-        CompositeScore score = engine.score(dest, ctx);
+        CompositeScore score = engine.score(dest, ctx, false);
         
         assertTrue(score.distanceScore() > 0.9, "Distance score should be very high for nearby locations");
     }
@@ -77,7 +77,7 @@ class ScoringEngineTest {
                 .reviewCount(1000)
                 .build();
 
-        CompositeScore score = engine.score(dest, ctx);
+        CompositeScore score = engine.score(dest, ctx, false);
         
         assertTrue(score.distanceScore() < 0.1, "Should have a very low score since it's far");
     }
@@ -97,7 +97,7 @@ class ScoringEngineTest {
                 .avgCostPerPerson(BigDecimal.valueOf(50000)) // 50k < 100k
                 .build();
 
-        CompositeScore score = engine.score(dest, ctx);
+        CompositeScore score = engine.score(dest, ctx, false);
         assertEquals(1.0, score.budgetScore(), 0.01);
     }
 
@@ -116,7 +116,7 @@ class ScoringEngineTest {
                 .avgCostPerPerson(BigDecimal.valueOf(150000)) // 150k > 100k (ratio 1.5)
                 .build();
 
-        CompositeScore score = engine.score(dest, ctx);
+        CompositeScore score = engine.score(dest, ctx, false);
         assertEquals(0.0, score.budgetScore(), 0.01, "Should be 0 if way over budget");
     }
 
@@ -135,7 +135,7 @@ class ScoringEngineTest {
                 .tags("[\"Nature\", \"Photography\"]") // 1 match out of 2 styles
                 .build();
 
-        CompositeScore score = engine.score(dest, ctx);
+        CompositeScore score = engine.score(dest, ctx, false);
         assertEquals(0.5, score.preferenceScore(), 0.01); // 1 / 2 = 0.5
     }
 
@@ -154,7 +154,7 @@ class ScoringEngineTest {
                 .openingHours("{\"mon\": \"closed\"}")
                 .build();
         
-        CompositeScore scoreClosed = engine.score(destClosed, ctx);
+        CompositeScore scoreClosed = engine.score(destClosed, ctx, false);
         assertEquals(0.0, scoreClosed.hoursScore(), 0.01);
 
         // Open 24h
@@ -163,7 +163,47 @@ class ScoringEngineTest {
                 .openingHours("{\"mon\": \"24h\"}")
                 .build();
         
-        CompositeScore score24h = engine.score(dest24h, ctx);
+        CompositeScore score24h = engine.score(dest24h, ctx, false);
         assertEquals(1.0, score24h.hoursScore(), 0.01);
+    }
+
+    @Test
+    void testScoreWithWeatherAdjustment() {
+        Destination outdoorDest = Destination.builder()
+            .name("Outdoor Park")
+            .latitude(10.01)
+            .longitude(106.01)
+            .indoor(false)
+            .avgRating(4.5)
+            .reviewCount(100)
+            .build();
+            
+        Destination indoorDest = Destination.builder()
+            .name("Indoor Museum")
+            .latitude(10.01)
+            .longitude(106.01)
+            .indoor(true)
+            .avgRating(4.5)
+            .reviewCount(100)
+            .build();
+
+        TravelContext ctx = TravelContext.builder()
+            .date(LocalDate.of(2023, 10, 25))
+            .startLat(10.0)
+            .startLon(106.0)
+            .transportation(Transportation.CAR)
+            .build();
+
+        CompositeScore outdoorScoreRain = engine.score(outdoorDest, ctx, true);
+        CompositeScore indoorScoreRain = engine.score(indoorDest, ctx, true);
+        
+        CompositeScore outdoorScoreNoRain = engine.score(outdoorDest, ctx, false);
+        CompositeScore indoorScoreNoRain = engine.score(indoorDest, ctx, false);
+
+        // Outdoor should be penalized when raining
+        assertTrue(outdoorScoreRain.total() < outdoorScoreNoRain.total());
+        
+        // Indoor should be boosted when raining
+        assertTrue(indoorScoreRain.total() > indoorScoreNoRain.total());
     }
 }

@@ -56,7 +56,7 @@ jwt.secret: "your-strong-secret-key-here"
 
 ### 3. Khởi chạy Backend
 
-Backend sẽ tự động seed (nạp) 52 địa điểm thực tế tại TP.HCM vào cơ sở dữ liệu nếu bảng `destinations` chưa có dữ liệu.
+Backend sẽ tự động seed (nạp) 52 địa điểm thực tế tại TP.Hồ Chí Minh vào cơ sở dữ liệu nếu bảng `destinations` chưa có dữ liệu.
 
 ```bash
 ./mvnw spring-boot:run

@@ -36,6 +36,7 @@ export interface TripActivity {
 export interface TripPlanResponse {
   variantName: string;
   variantDescription: string;
+  aiNarrative?: string;
   activities: TripActivity[];
   totalCost: number;
   totalDistanceKm: number;
@@ -84,6 +85,7 @@ export const planningApi = {
   getTrip: (id: string) => api.get<{data: TripResponse}>(`/trips/${id}`),
   deleteTrip: (id: string) => api.delete(`/trips/${id}`),
   exportPdf: (id: string) => api.get(`/trips/${id}/export/pdf`, { responseType: 'blob' }),
+  getCities: () => api.get<{data: string[]}>('/destinations/cities'),
 };
 
 export default api;

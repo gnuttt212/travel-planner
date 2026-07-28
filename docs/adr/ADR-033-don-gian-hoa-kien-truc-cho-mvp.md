@@ -52,4 +52,4 @@ Tách `recommendation` ra một service Python riêng để tiện làm Machine 
 
 - Xóa toàn bộ code cũ liên quan đến `collaboration`, `booking`, `interaction`, `itinerary`.
 - Chuyển `application.yml` sang sử dụng DB chuẩn (PostgreSQL không cần pgvector extension).
-- Xây dựng `DataSeeder` mạnh mẽ để đảm bảo luôn có khoảng 50+ địa điểm thực tế tại TP.HCM kèm dữ liệu chuẩn để thuật toán có thể hoạt động hiệu quả khi review.
+- Xây dựng `DataSeeder` mạnh mẽ để đảm bảo luôn có khoảng 50+ địa điểm thực tế tại TP.Hồ Chí Minh kèm dữ liệu chuẩn để thuật toán có thể hoạt động hiệu quả khi review.

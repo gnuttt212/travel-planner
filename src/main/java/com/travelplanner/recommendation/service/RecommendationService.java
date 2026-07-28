@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.travelplanner.recommendation.integration.OpenWeatherMapServiceClient;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -18,8 +20,15 @@ public class RecommendationService {
     private final DestinationRepository destinationRepository;
     private final ScoringEngine scoringEngine;
     private final PlanBuilder planBuilder;
+    private final OpenWeatherMapServiceClient weatherClient;
     
     public List<TripPlanVariant> recommend(TravelContext ctx, String city) {
+        // Query Weather
+        boolean isRaining = weatherClient.isRaining(ctx.startLat(), ctx.startLon(), ctx.date());
+        if (isRaining) {
+            log.info("Rain detected for {}. Outdoor destinations will be penalized.", ctx.date());
+        }
+
         // Step 1: Get candidates from DB
         List<Destination> candidates = destinationRepository.findCandidates(city, ctx.budgetPerPerson());
         log.info("Found {} candidates for city={}, budget={}", candidates.size(), city, ctx.budgetPerPerson());
@@ -31,7 +40,7 @@ public class RecommendationService {
         
         // Step 2: Score each candidate
         List<ScoredDestination> scored = candidates.stream()
-            .map(dest -> new ScoredDestination(dest, scoringEngine.score(dest, ctx)))
+            .map(dest -> new ScoredDestination(dest, scoringEngine.score(dest, ctx, isRaining)))
             .sorted()
             .collect(Collectors.toList());
         

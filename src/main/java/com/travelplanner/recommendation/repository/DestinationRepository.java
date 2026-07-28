@@ -10,9 +10,12 @@ import java.util.*;
 
 public interface DestinationRepository extends JpaRepository<Destination, UUID> {
     List<Destination> findByCity(String city);
-    
+
     @Query("SELECT d FROM Destination d WHERE d.city = :city AND d.avgCostPerPerson <= :maxBudget")
     List<Destination> findCandidates(@Param("city") String city, @Param("maxBudget") BigDecimal maxBudget);
-    
+
+    @Query("SELECT DISTINCT d.city FROM Destination d ORDER BY d.city")
+    List<String> findDistinctCities();
+
     List<Destination> findByCategoryAndCityAndIndoorTrue(DestinationCategory category, String city);
 }

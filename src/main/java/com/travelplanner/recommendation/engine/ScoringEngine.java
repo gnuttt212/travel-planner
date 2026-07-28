@@ -21,7 +21,7 @@ public class ScoringEngine {
     private static final double GLOBAL_AVG_RATING = 3.5;
     private static final int GLOBAL_AVG_REVIEW_COUNT = 50;
     
-    public CompositeScore score(Destination dest, TravelContext ctx) {
+    public CompositeScore score(Destination dest, TravelContext ctx, boolean isRaining) {
         double R = scoreRating(dest);
         double D = scoreDistance(dest, ctx);
         double H = scoreHours(dest, ctx);
@@ -29,6 +29,16 @@ public class ScoringEngine {
         double B = scoreBudget(dest, ctx);
         
         double total = W_RATING * R + W_DISTANCE * D + W_HOURS * H + W_PREFERENCE * U + W_BUDGET * B;
+        
+        // Weather adjustment
+        if (isRaining) {
+            if (!dest.isIndoor()) {
+                total = total * 0.4; // 60% penalty for outdoor when raining
+            } else {
+                total = Math.min(1.0, total * 1.2); // 20% bonus for indoor when raining
+            }
+        }
+        
         return new CompositeScore(total, R, D, H, U, B);
     }
     

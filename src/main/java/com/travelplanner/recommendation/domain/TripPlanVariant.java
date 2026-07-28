@@ -7,6 +7,7 @@ import java.util.List;
 public record TripPlanVariant(
     String name,
     String description,
+    String aiNarrative,
     List<TripActivity> activities,
     BigDecimal totalCost,
     double totalDistanceKm
