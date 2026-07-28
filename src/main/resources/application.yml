@@ -11,6 +11,7 @@ spring:
   sql:
     init:
       mode: always
+      encoding: UTF-8
   jpa:
     hibernate:
       ddl-auto: update # doi thanh "validate" va dung Flyway/Liquibase khi len production that
