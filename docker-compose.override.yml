@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  backend:
+    image: openjdk:22-jdk
+    container_name: travel-planner-backend
+    working_dir: /app
+    volumes:
+      - ./:/app:cached
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_URL
+      - DB_USERNAME
+      - DB_PASSWORD
+      - JWT_SECRET
+      - ORS_API_KEY
+      - OPENWEATHERMAP_API_KEY
+      - GEMINI_API_KEY
+      - REDIS_HOST
+      - REDIS_PORT
+      - SPRING_PROFILES_ACTIVE
+    depends_on:
+      - postgres
+      - redis
+    command: ["sh", "-c", "chmod +x ./mvnw && ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod"]

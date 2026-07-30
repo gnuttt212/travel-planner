@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { planningApi } from '../api';
 import type { TravelContextRequest } from '../api';
+import LocationTransport from '../components/LocationTransport';
 
 const PURPOSES = [
   { id: 'RELAXATION', label: 'Nghỉ dưỡng', icon: '🏖️' },
@@ -21,7 +22,6 @@ export default function ContextCards() {
   const [loading, setLoading] = useState(false);
 
   const [cities, setCities] = useState<string[]>([]);
-  const [citiesLoading, setCitiesLoading] = useState(true);
 
   const [formData, setFormData] = useState<Partial<TravelContextRequest>>({
     purpose: undefined,
@@ -45,9 +45,39 @@ export default function ContextCards() {
       .catch(e => {
         console.error('Không lấy được danh sách thành phố:', e);
         setCities([]);
-      })
-      .finally(() => setCitiesLoading(false));
+      });
   }, []);
+
+  // Small city center list for nearest-city mapping (lat, lon)
+  const CITY_COORDS: { name: string; lat: number; lon: number }[] = [
+    { name: 'Hồ Chí Minh', lat: 10.7769, lon: 106.7009 },
+    { name: 'Hà Nội', lat: 21.0278, lon: 105.8342 },
+    { name: 'Đà Nẵng', lat: 16.0544, lon: 108.2022 },
+    { name: 'Huế', lat: 16.4637, lon: 107.5909 },
+    { name: 'Nha Trang', lat: 12.2388, lon: 109.1967 },
+    { name: 'Đà Lạt', lat: 11.9404, lon: 108.4583 },
+    { name: 'Cần Thơ', lat: 10.0452, lon: 105.7469 },
+  ];
+
+  const toRad = (deg: number) => deg * Math.PI / 180;
+  const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const findNearestCity = (lat: number, lon: number) => {
+    let best = { name: '', d: Infinity };
+    CITY_COORDS.forEach(c => {
+      const d = haversineKm(lat, lon, c.lat, c.lon);
+      if (d < best.d) best = { name: c.name, d };
+    });
+    // Only accept if within 120 km
+    return best.d <= 120 ? best.name : null;
+  };
 
   const updateForm = (key: keyof TravelContextRequest, value: any) => {
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -259,41 +289,19 @@ export default function ContextCards() {
           <div className="step-content">
             <h2>Địa điểm & Di chuyển</h2>
             <div className="input-group">
-              <label>Thành phố</label>
-              {citiesLoading ? (
-                <div className="loading-text">Đang tải danh sách thành phố...</div>
-              ) : cities.length === 0 ? (
-                <div className="auth-error">Không tải được danh sách thành phố. Vui lòng thử lại sau.</div>
-              ) : (
-                <div className="city-grid">
-                  {cities.map(c => (
-                    <button
-                      key={c}
-                      type="button"
-                      className={`glass-btn ${formData.city === c ? 'active' : ''}`}
-                      onClick={() => updateForm('city', c)}
-                    >
-                      📍 {c}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <label className="mt-4 block">Phương tiện</label>
-            <div className="transport-buttons">
-              {[
-                { id: 'MOTORBIKE', label: '🏍️ Xe máy' },
-                { id: 'CAR', label: '🚗 Ô tô' },
-                { id: 'PUBLIC', label: '🚌 Phương tiện công cộng' }
-              ].map(t => (
-                <button 
-                  key={t.id}
-                  className={`glass-btn ${formData.transportation === t.id ? 'active' : ''}`}
-                  onClick={() => updateForm('transportation', t.id)}
-                >
-                  {t.label}
-                </button>
-              ))}
+              <LocationTransport
+                cities={cities}
+                city={formData.city as string | undefined}
+                onCityChange={(c) => updateForm('city', c)}
+                transportation={formData.transportation as any}
+                onTransportationChange={(t) => updateForm('transportation', t)}
+                onUseCurrentLocation={(lat, lon) => {
+                  updateForm('startLat', lat);
+                  updateForm('startLon', lon);
+                  const nearest = findNearestCity(lat, lon);
+                  if (nearest) updateForm('city', nearest);
+                }}
+              />
             </div>
           </div>
         );

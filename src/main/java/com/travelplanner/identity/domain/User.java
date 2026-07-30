@@ -19,6 +19,10 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private String password;
 
+    private String displayName;
+    private String avatarUrl;
+    private String bio;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;

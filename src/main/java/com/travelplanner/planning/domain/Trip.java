@@ -32,6 +32,11 @@ public class Trip {
     
     @Enumerated(EnumType.STRING)
     private Transportation transportation;
+
+    /** Mức độ hiển thị: PUBLIC / FRIENDS_ONLY / PRIVATE. Default PRIVATE cho backward-compatible. */
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private TripVisibility visibility = TripVisibility.PRIVATE;
     
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id")

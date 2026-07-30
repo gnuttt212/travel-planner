@@ -13,8 +13,7 @@ export default function MyTrips() {
         setTrips(res.data.data);
         setLoading(false);
       })
-      .catch(e => {
-        console.error(e);
+      .catch(() => {
         setLoading(false);
       });
   }, []);
@@ -25,7 +24,7 @@ export default function MyTrips() {
       try {
         await planningApi.deleteTrip(id);
         setTrips(trips.filter(t => t.id !== id));
-      } catch (e) {
+      } catch {
         alert('Lỗi xóa chuyến đi');
       }
     }

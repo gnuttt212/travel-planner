@@ -7,6 +7,7 @@ Trang này tập hợp các tài liệu kiến trúc và quyết định thiết
 - [Architecture Overview](architecture-overview.md)
 - [System Context Diagram](system-context-diagram.md)
 - [C4 Model](c4-model.md)
+- [API Endpoints](api-endpoints.md)
 - [ADR Index](adr/README.md)
 
 ## Mục đích sử dụng
