@@ -33,6 +33,9 @@ class StartupConfigValidatorTest {
         environment.setProperty("spring.datasource.username", "user");
         environment.setProperty("spring.datasource.password", "pass");
 
+        environment.setProperty("ors.api.key", "test-ors-key");
+        environment.setProperty("openweathermap.api.key", "test-owm-key");
+
         StartupConfigValidator validator = new StartupConfigValidator(environment);
 
         assertDoesNotThrow(validator::run);

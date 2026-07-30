@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --color-bg: #0a0a1a;
   --color-card: rgba(255, 255, 255, 0.05);
@@ -149,6 +153,160 @@ body {
 .glass-btn.active {
   background: rgba(139, 92, 246, 0.2);
   border-color: var(--color-accent);
+}
+
+.profile-page {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 0 1rem 2rem;
+}
+
+.profile-header {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profile-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.profile-avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.notification-banner {
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
+  border-left: 4px solid var(--color-accent);
+  color: var(--text-main);
+  background: rgba(139, 92, 246, 0.12);
+}
+
+.profile-body {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.profile-section {
+  padding: 1.5rem;
+}
+
+.profile-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.profile-edit-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.user-list,
+.friends-list,
+.request-list {
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+  padding: 0;
+}
+
+.user-item,
+.friend-item,
+.request-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.search-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.action-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-pill {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-none {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.status-request_sent,
+.status-request_received {
+  background: rgba(245, 158, 11, 0.16);
+  color: #facc15;
+}
+
+.status-friend,
+.status-friend {
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+}
+
+.request-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .request-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.error-banner {
+  margin-top: 1rem;
+  padding: 1rem;
+  color: #ffe4e6;
+  background: rgba(248, 113, 113, 0.12);
+  border-left: 4px solid #f43f5e;
 }
 
 .glass-input {
@@ -570,5 +728,150 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.profile-page {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.profile-avatar-section {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid var(--color-accent);
+  object-fit: cover;
+}
+
+.profile-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.profile-detail-section {
+  padding: 1.5rem;
+}
+
+.profile-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.profile-edit-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.profile-edit-form label {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.profile-summary {
+  color: var(--text-muted);
+  line-height: 1.75;
+}
+
+.request-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.request-list,
+.user-list {
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.request-item,
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+}
+
+.user-search-list {
+  margin-top: 1rem;
+}
+
+.user-search-item {
+  gap: 1rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.search-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-light);
+}
+
+.action-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-pill {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  text-transform: uppercase;
+}
+
+.status-friend {
+  background: rgba(56, 189, 248, 0.18);
+  color: #38bdf8;
+}
+
+.status-request_sent {
+  background: rgba(251, 191, 36, 0.18);
+  color: #fbbf24;
+}
+
+.status-request_received {
+  background: rgba(59, 130, 246, 0.18);
+  color: #3b82f6;
+}
+
+.status-none {
+  background: rgba(148, 163, 184, 0.18);
+  color: #94a3b8;
+}
+
+.error-banner {
+  padding: 1rem 1.5rem;
+  color: #fee2e2;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 12px;
 }
 

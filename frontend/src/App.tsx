@@ -5,6 +5,8 @@ import ContextCards from './pages/ContextCards';
 import Results from './pages/Results';
 import TripDetail from './pages/TripDetail';
 import MyTrips from './pages/MyTrips';
+import Profile from './pages/Profile';
+import Dashboard from './pages/Dashboard';
 import './index.css';
 
 function App() {
@@ -25,6 +27,7 @@ function App() {
             <div className="nav-links">
               <Link to="/plan/new">Lên kế hoạch</Link>
               <Link to="/trips">Chuyến đi của tôi</Link>
+              <Link to="/profile">Hồ sơ</Link>
               <button onClick={handleLogout}>Đăng xuất</button>
             </div>
           )}
@@ -37,7 +40,8 @@ function App() {
             <Route path="/plan/results" element={token ? <Results /> : <Navigate to="/login" />} />
             <Route path="/trip/:id" element={token ? <TripDetail /> : <Navigate to="/login" />} />
             <Route path="/trips" element={token ? <MyTrips /> : <Navigate to="/login" />} />
-            <Route path="/" element={<Navigate to={token ? "/plan/new" : "/login"} />} />
+            <Route path="/profile" element={token ? <Profile /> : <Navigate to="/login" />} />
+            <Route path="/" element={token ? <Dashboard /> : <Navigate to="/login" />} />
           </Routes>
         </main>
       </div>

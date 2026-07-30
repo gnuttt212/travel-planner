@@ -53,6 +53,38 @@ export interface TripResponse {
   createdAt: string;
 }
 
+export interface ProfileResponse {
+  email: string;
+  role: string;
+  createdAt: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  bio: string | null;
+}
+
+export interface UserDto {
+  email: string;
+}
+
+export interface UserSearchResult {
+  email: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  relationshipStatus: string;
+}
+
+export interface FriendRequestDto {
+  id: string;
+  senderEmail: string;
+  receiverEmail: string;
+  status: string;
+}
+
+export function getAuthTokenQueryParam() {
+  const token = localStorage.getItem('token');
+  return token ? `?token=${encodeURIComponent(token)}` : '';
+}
+
 const api = axios.create({
   baseURL: 'http://localhost:8080/api/v1',
 });
@@ -89,3 +121,14 @@ export const planningApi = {
 };
 
 export default api;
+
+// Messaging helpers
+export const messagingApi = {
+  sendMessage: (to: string, content: string) => api.post<{data: any}>('/messages', { to, content }),
+  getConversation: (otherEmail: string) => api.get<{data: any}>(`/messages/with/${encodeURIComponent(otherEmail)}`),
+  addComment: (tripId: string, content: string) => api.post<{data: any}>('/comments', { tripId, content }),
+  listComments: (tripId: string) => api.get<{data: any}>(`/comments/trip/${encodeURIComponent(tripId)}`),
+  react: (targetType: string, targetId: string, type: string) => api.post<{data: any}>('/reactions', { targetType, targetId, type }),
+  removeReaction: (targetType: string, targetId: string) => api.delete(`/reactions?targetType=${encodeURIComponent(targetType)}&targetId=${encodeURIComponent(targetId)}`),
+  listReactions: (targetType: string, targetId: string) => api.get<{data: any}>(`/reactions?targetType=${encodeURIComponent(targetType)}&targetId=${encodeURIComponent(targetId)}`),
+};

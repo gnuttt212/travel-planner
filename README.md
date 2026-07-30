@@ -15,6 +15,8 @@ Travel Planner giúp người dùng tạo lịch trình du lịch cá nhân hóa
 | 📅 **Slot Allocator** | Tự động sắp xếp lịch trình thông minh dựa trên thời gian di chuyển, thời gian ước tính tại điểm đến. |
 | 📍 **Bản đồ tương tác** | Tích hợp Leaflet hiển thị các điểm đến và vẽ tuyến đường trực quan. |
 | ⏱️ **Timeline View** | Hiển thị lịch trình dạng trục thời gian dọc (Vertical Timeline) đầy đủ thông tin chi phí và thời gian. |
+| 🧑‍🤝‍🧑 **Mạng xã hội & hợp tác** | Quản lý bạn bè, yêu cầu kết bạn, profile cá nhân, chat nhanh, bình luận và reaction. |
+| 🧭 **Accessible search UI** | City combobox + transport selector được xây dựng với ARIA, keyboard navigation và behavior rõ ràng. |
 | 🎨 **Premium UI/UX** | Giao diện Dark Theme, Glassmorphism và hiệu ứng chuyển động mượt mà (GSAP). |
 | 🔐 **Xác thực an toàn** | Sử dụng JWT (JSON Web Token) kết hợp BCrypt. |
 
@@ -34,45 +36,119 @@ Hệ thống được thiết kế theo kiến trúc **Modular Monolith** cực 
 
 ### Yêu cầu
 - **Java** 22+
-- **Node.js** 20+ & npm
+- **Node.js** 20+ và **npm**
 - **Docker** & Docker Compose
+- **PostgreSQL** và **Redis** (có thể chạy qua `docker-compose.yml`)
 
 ### 1. Khởi động hạ tầng Database
 
-Hệ thống sử dụng PostgreSQL và Redis:
+Chạy Docker Compose để tạo PostgreSQL và Redis:
 
 ```bash
 docker-compose up -d
 ```
 
-### 2. Cấu hình API Keys (Chuẩn bị cho Phase 2)
+### 1a. Chạy production với Docker Compose
 
-Copy file `src/main/resources/application.yml` và thay đổi các cấu hình nếu cần (mặc định đã chạy được cho Phase 1 nhờ dữ liệu mock/seed).
+Bạn có thể dùng tệp `.env` để quản lý các biến môi trường production. Sao chép `env.example` thành `.env` và cập nhật giá trị phù hợp.
+
+```bash
+cp env.example .env
+docker-compose up -d
+```
+
+Nếu bạn muốn chạy backend cùng với PostgreSQL và Redis trong container, sử dụng tệp `docker-compose.override.yml` đã bổ sung sẵn và chạy:
+
+```bash
+docker-compose --env-file .env up -d
+```
+
+Backend container sẽ khởi động với profile production nếu `SPRING_PROFILES_ACTIVE=prod` được đặt trong `.env`.
+
+> Lưu ý: `docker-compose.override.yml` mount toàn bộ thư mục repo vào `/app` và chạy `./mvnw spring-boot:run -Dspring-boot.run.profiles=prod`.
+
+### 2. Thiết lập biến môi trường
+
+Frontend và backend sử dụng các biến môi trường sau:
+
+- `DB_URL` - JDBC URL cho PostgreSQL
+- `DB_USERNAME` - tên user PostgreSQL
+- `DB_PASSWORD` - mật khẩu PostgreSQL
+- `JWT_SECRET` - secret cho JWT
+- `ORS_API_KEY` - OpenRouteService API key (Phase 2)
+- `OPENWEATHERMAP_API_KEY` - OpenWeatherMap API key (Phase 2)
+- `GEMINI_API_KEY` - Gemini API key (Phase 3)
+- `APP_ADMIN_EMAIL`, `APP_ADMIN_PASSWORD` - tài khoản admin seed mặc định
+
+Lưu ý cho production:
+
+- Production phải chạy với profile `prod` và không dùng `spring.jpa.hibernate.ddl-auto=update`.
+- Backend đã được cấu hình để dùng Flyway migration trong production và `ddl-auto: validate`.
+- `JWT_SECRET`, `ORS_API_KEY`, và `OPENWEATHERMAP_API_KEY` phải được cung cấp qua environment variables, không dùng giá trị mặc định.
+- `application-prod.yml` sẽ được kích hoạt khi `spring.profiles.active=prod`.
+- Nếu dùng Docker Compose, tạo tệp `.env` từ `env.example` và chạy `docker-compose up -d`.
+
+Mặc định cấu hình đã sử dụng:
 
 ```yaml
-# Cấu hình JWT an toàn cho production
-jwt.secret: "your-strong-secret-key-here"
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/travel_planner}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+jwt:
+  secret: ${JWT_SECRET}
+ors:
+  api:
+    key: ${ORS_API_KEY:}
+openweathermap:
+  api:
+    key: ${OPENWEATHERMAP_API_KEY:}
 ```
 
-### 3. Khởi chạy Backend
+### 3. Chuẩn bị backend
 
-Backend sẽ tự động seed (nạp) 52 địa điểm thực tế tại TP.Hồ Chí Minh vào cơ sở dữ liệu nếu bảng `destinations` chưa có dữ liệu.
+Backend có thể chạy trực tiếp bằng Maven Wrapper:
 
 ```bash
-./mvnw spring-boot:run
+./mvnw.cmd spring-boot:run
 ```
-- API chạy tại: `http://localhost:8080/api/v1`
 
-### 4. Khởi chạy Frontend
+Hoặc chạy production với profile `prod`:
+
+```powershell
+.\scripts\run-prod.ps1
+```
+
+API backend mặc định có sẵn tại:
+
+`http://localhost:8080/api/v1`
+
+> Lưu ý: cấu hình CORS đã cho phép các cổng `3000`, `3001`, và `5173`.
+
+### 4. Chuẩn bị frontend
+
+Trong thư mục `frontend`:
 
 ```bash
-cd frontend
 npm install
 npm run dev
 ```
-- Ứng dụng chạy tại: `http://localhost:3000` (hoặc `3001` nếu cổng 3000 bị bận).
 
-> **Lưu ý CORS:** Backend đã được cấu hình mặc định cho phép các cổng `3000`, `3001`, và `5173`.
+Frontend mặc định chạy tại:
+
+`http://localhost:3000`
+
+### 5. Kiểm tra build
+
+- Backend: `./mvnw.cmd -DskipTests package`
+- Frontend: `npm run build`
+
+### 6. Tài liệu và cấu trúc
+
+- `docs/README.md` — hub tài liệu kiến trúc
+- `docs/api-endpoints.md` — API endpoints
+- `docs/location-transport.md` — hướng dẫn component LocationTransport
 
 ---
 
@@ -103,6 +179,14 @@ npm run dev
 - [ ] **Phase 2**: Tích hợp OpenRouteService API (tính toán khoảng cách chính xác thay vì đường chim bay) và OpenWeatherMap API (điều chỉnh lịch trình theo thời tiết).
 - [ ] **Phase 3**: Thêm tính năng kéo thả (Drag & Drop) vào Timeline để điều chỉnh lịch trình bằng tay. 
 - [ ] **Phase 4**: Xuất PDF / ICS và chia sẻ link lịch trình.
+
+---
+
+## 🧩 Components
+
+- **LocationTransport** — accessible city search combobox + segmented transport control used in the planning flow. Xem hướng dẫn và cách sử dụng tại `docs/location-transport.md`.
+- **Profile & Friends** — giao diện profile người dùng, yêu cầu kết bạn, danh sách bạn bè và chat tích hợp.
+- **Trip comments & reactions** — tính năng bình luận và reaction cho mỗi chuyến đi.
 
 ---
 

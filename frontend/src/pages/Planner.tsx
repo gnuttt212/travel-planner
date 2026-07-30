@@ -24,8 +24,10 @@ const loadInitialWaypoints = (): Waypoint[] => {
         longitude: d.longitude
       }));
     }
-  } catch (e) {}
-  
+  } catch {
+    // Ignore invalid JSON stored in localStorage and fall back to defaults.
+  }
+
   return [
     { id: '1', destinationId: '1', name: 'Hội An', latitude: 15.88, longitude: 108.33 },
     { id: '2', destinationId: '2', name: 'Đà Nẵng', latitude: 16.07, longitude: 108.22 },
@@ -33,7 +35,7 @@ const loadInitialWaypoints = (): Waypoint[] => {
   ];
 };
 
-const SortableItem = ({ id, wp }: { id: string, wp: Waypoint }) => {
+const SortableItem = ({ id, wp }: { id: string; wp: Waypoint }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -96,7 +98,7 @@ const Planner: React.FC = () => {
         distance: res.data.data.totalDistanceKm,
         duration: res.data.data.totalDurationMinutes
       });
-    } catch (e) {
+    } catch {
       alert('Failed to optimize route');
     }
     setOptimizing(false);
