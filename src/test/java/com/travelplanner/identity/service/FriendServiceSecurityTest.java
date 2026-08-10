@@ -8,6 +8,7 @@ import com.travelplanner.identity.domain.Friendship;
 import com.travelplanner.identity.repository.FriendRequestRepository;
 import com.travelplanner.identity.repository.FriendshipRepository;
 import com.travelplanner.identity.repository.UserRepository;
+import com.travelplanner.identity.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -125,6 +126,40 @@ class FriendServiceSecurityTest {
                     .thenReturn(Optional.empty());
 
             assertThat(friendService.areFriends(SENDER_EMAIL, STRANGER_EMAIL)).isFalse();
+        }
+    }
+
+    // ==================== sendFriendRequest ====================
+
+    @Nested
+    @DisplayName("sendFriendRequest()")
+    class SendFriendRequestTest {
+
+        @Test
+        @DisplayName("Người kia đã gửi lời mời → Tự động accept")
+        void sendFriendRequest_oppositePending_autoAccepts() {
+            User receiver = new User();
+            receiver.setEmail(RECEIVER_EMAIL);
+            when(userRepository.findByEmail(RECEIVER_EMAIL)).thenReturn(Optional.of(receiver));
+            when(friendshipRepository.findByUserIdAndFriendId(SENDER_EMAIL, RECEIVER_EMAIL)).thenReturn(Optional.empty());
+            when(friendRequestRepository.findBySenderEmailAndReceiverEmail(SENDER_EMAIL, RECEIVER_EMAIL)).thenReturn(Optional.empty());
+
+            FriendRequest oppositeRequest = new FriendRequest();
+            oppositeRequest.setId("opp-123");
+            oppositeRequest.setSenderEmail(RECEIVER_EMAIL);
+            oppositeRequest.setReceiverEmail(SENDER_EMAIL);
+            oppositeRequest.setStatus(FriendRequestStatus.PENDING);
+            when(friendRequestRepository.findBySenderEmailAndReceiverEmail(RECEIVER_EMAIL, SENDER_EMAIL))
+                    .thenReturn(Optional.of(oppositeRequest));
+
+            when(friendRequestRepository.findById("opp-123")).thenReturn(Optional.of(oppositeRequest));
+
+            friendService.sendFriendRequest(SENDER_EMAIL, RECEIVER_EMAIL);
+
+            verify(friendRequestRepository).save(argThat(req -> req.getStatus() == FriendRequestStatus.ACCEPTED));
+            verify(friendshipRepository, times(2)).save(any(Friendship.class));
+            // Đảm bảo không tạo thêm request mới
+            verify(friendRequestRepository, never()).save(argThat(req -> req.getId() == null));
         }
     }
 }

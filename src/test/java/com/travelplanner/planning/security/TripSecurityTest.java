@@ -1,7 +1,7 @@
 package com.travelplanner.planning.security;
 
 import com.travelplanner.identity.domain.Friendship;
-import com.travelplanner.identity.repository.FriendshipRepository;
+import com.travelplanner.common.port.FriendshipPort;
 import com.travelplanner.planning.domain.Trip;
 import com.travelplanner.planning.domain.TripVisibility;
 import com.travelplanner.planning.repository.TripRepository;
@@ -33,7 +33,7 @@ class TripSecurityTest {
     private TripRepository tripRepository;
 
     @Mock
-    private FriendshipRepository friendshipRepository;
+    private FriendshipPort friendshipPort;
 
     @InjectMocks
     private TripSecurity tripSecurity;
@@ -116,8 +116,7 @@ class TripSecurityTest {
         @DisplayName("FRIENDS_ONLY trip + user là bạn bè → pass")
         void canView_friendsOnlyTrip_friend_returnsTrue() {
             when(tripRepository.findById(TRIP_ID)).thenReturn(Optional.of(buildTrip(TripVisibility.FRIENDS_ONLY)));
-            when(friendshipRepository.findByUserIdAndFriendId(FRIEND_EMAIL, OWNER_EMAIL))
-                    .thenReturn(Optional.of(new Friendship()));
+            when(friendshipPort.areFriends(FRIEND_EMAIL, OWNER_EMAIL)).thenReturn(true);
             Authentication auth = mockAuthentication(FRIEND_EMAIL, "ROLE_USER");
 
             assertThat(tripSecurity.canView(TRIP_ID, auth)).isTrue();
@@ -127,8 +126,7 @@ class TripSecurityTest {
         @DisplayName("FRIENDS_ONLY trip + stranger → 403")
         void canView_friendsOnlyTrip_stranger_returnsFalse() {
             when(tripRepository.findById(TRIP_ID)).thenReturn(Optional.of(buildTrip(TripVisibility.FRIENDS_ONLY)));
-            when(friendshipRepository.findByUserIdAndFriendId(STRANGER_EMAIL, OWNER_EMAIL))
-                    .thenReturn(Optional.empty());
+            when(friendshipPort.areFriends(STRANGER_EMAIL, OWNER_EMAIL)).thenReturn(false);
             Authentication auth = mockAuthentication(STRANGER_EMAIL, "ROLE_USER");
 
             assertThat(tripSecurity.canView(TRIP_ID, auth)).isFalse();
@@ -201,8 +199,7 @@ class TripSecurityTest {
         @Test
         @DisplayName("Bạn bè → thấy PUBLIC + FRIENDS_ONLY")
         void getVisibleTrips_friend_returnsPublicAndFriendsOnly() {
-            when(friendshipRepository.findByUserIdAndFriendId(FRIEND_EMAIL, OWNER_EMAIL))
-                    .thenReturn(Optional.of(new Friendship()));
+            when(friendshipPort.areFriends(FRIEND_EMAIL, OWNER_EMAIL)).thenReturn(true);
             Authentication auth = mockAuthentication(FRIEND_EMAIL, "ROLE_USER");
 
             List<Trip> result = tripSecurity.getVisibleTrips(OWNER_EMAIL, FRIEND_EMAIL, auth);
@@ -214,8 +211,7 @@ class TripSecurityTest {
         @Test
         @DisplayName("Người lạ → chỉ thấy PUBLIC")
         void getVisibleTrips_stranger_returnsOnlyPublic() {
-            when(friendshipRepository.findByUserIdAndFriendId(STRANGER_EMAIL, OWNER_EMAIL))
-                    .thenReturn(Optional.empty());
+            when(friendshipPort.areFriends(STRANGER_EMAIL, OWNER_EMAIL)).thenReturn(false);
             Authentication auth = mockAuthentication(STRANGER_EMAIL, "ROLE_USER");
 
             List<Trip> result = tripSecurity.getVisibleTrips(OWNER_EMAIL, STRANGER_EMAIL, auth);

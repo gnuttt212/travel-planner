@@ -1,11 +1,13 @@
 package com.travelplanner.messaging.security;
 
 import com.travelplanner.identity.domain.Friendship;
-import com.travelplanner.identity.repository.FriendshipRepository;
+import com.travelplanner.common.port.FriendshipPort;
+import com.travelplanner.messaging.domain.Comment;
+import com.travelplanner.messaging.repository.CommentRepository;
 import com.travelplanner.planning.domain.Trip;
 import com.travelplanner.planning.domain.TripVisibility;
 import com.travelplanner.planning.repository.TripRepository;
-import com.travelplanner.planning.security.TripSecurity;
+import com.travelplanner.common.port.TripAccessPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -29,10 +31,13 @@ import static org.mockito.Mockito.*;
 class MessagingSecurityTest {
 
     @Mock
-    private TripSecurity tripSecurity;
+    private TripAccessPort tripAccessPort;
 
     @Mock
-    private FriendshipRepository friendshipRepository;
+    private FriendshipPort friendshipPort;
+
+    @Mock
+    private CommentRepository commentRepository;
 
     @InjectMocks
     private MessagingSecurity messagingSecurity;
@@ -58,7 +63,7 @@ class MessagingSecurityTest {
         @Test
         @DisplayName("User có quyền xem trip → xem comments được")
         void canViewTripComments_ownerTrip_returnsTrue() {
-            when(tripSecurity.canViewByStringId(TRIP_ID, USER_EMAIL)).thenReturn(true);
+            when(tripAccessPort.canView(TRIP_ID, USER_EMAIL)).thenReturn(true);
             Authentication auth = mockAuthentication(USER_EMAIL, "ROLE_USER");
 
             assertThat(messagingSecurity.canViewTripComments(TRIP_ID, auth)).isTrue();
@@ -67,7 +72,7 @@ class MessagingSecurityTest {
         @Test
         @DisplayName("User không có quyền xem trip private → 403")
         void canViewTripComments_strangerPrivateTrip_returnsFalse() {
-            when(tripSecurity.canViewByStringId(TRIP_ID, OTHER_EMAIL)).thenReturn(false);
+            when(tripAccessPort.canView(TRIP_ID, OTHER_EMAIL)).thenReturn(false);
             Authentication auth = mockAuthentication(OTHER_EMAIL, "ROLE_USER");
 
             assertThat(messagingSecurity.canViewTripComments(TRIP_ID, auth)).isFalse();
@@ -80,7 +85,7 @@ class MessagingSecurityTest {
 
             assertThat(messagingSecurity.canViewTripComments(TRIP_ID, auth)).isTrue();
             // Không cần gọi tripSecurity vì ADMIN bypass
-            verify(tripSecurity, never()).canViewByStringId(any(), any());
+            verify(tripAccessPort, never()).canView(any(), any());
         }
     }
 
@@ -93,7 +98,7 @@ class MessagingSecurityTest {
         @Test
         @DisplayName("User có quyền xem trip → comment được")
         void canComment_validTripAndPermission_returnsTrue() {
-            when(tripSecurity.canViewByStringId(TRIP_ID, USER_EMAIL)).thenReturn(true);
+            when(tripAccessPort.canView(TRIP_ID, USER_EMAIL)).thenReturn(true);
             Authentication auth = mockAuthentication(USER_EMAIL, "ROLE_USER");
 
             assertThat(messagingSecurity.canComment(TRIP_ID, auth)).isTrue();
@@ -102,7 +107,7 @@ class MessagingSecurityTest {
         @Test
         @DisplayName("User không có quyền xem trip → không comment được")
         void canComment_noPermission_returnsFalse() {
-            when(tripSecurity.canViewByStringId(TRIP_ID, OTHER_EMAIL)).thenReturn(false);
+            when(tripAccessPort.canView(TRIP_ID, OTHER_EMAIL)).thenReturn(false);
             Authentication auth = mockAuthentication(OTHER_EMAIL, "ROLE_USER");
 
             assertThat(messagingSecurity.canComment(TRIP_ID, auth)).isFalse();
@@ -118,8 +123,7 @@ class MessagingSecurityTest {
         @Test
         @DisplayName("Hai user là bạn bè → trả true")
         void areFriends_existingFriendship_returnsTrue() {
-            when(friendshipRepository.findByUserIdAndFriendId(USER_EMAIL, OTHER_EMAIL))
-                    .thenReturn(Optional.of(new Friendship()));
+            when(friendshipPort.areFriends(USER_EMAIL, OTHER_EMAIL)).thenReturn(true);
             Authentication auth = mockAuthentication(USER_EMAIL, "ROLE_USER");
 
             assertThat(messagingSecurity.areFriends(USER_EMAIL, OTHER_EMAIL, auth)).isTrue();
@@ -128,8 +132,7 @@ class MessagingSecurityTest {
         @Test
         @DisplayName("Hai user không phải bạn bè → trả false")
         void areFriends_noFriendship_returnsFalse() {
-            when(friendshipRepository.findByUserIdAndFriendId(USER_EMAIL, OTHER_EMAIL))
-                    .thenReturn(Optional.empty());
+            when(friendshipPort.areFriends(USER_EMAIL, OTHER_EMAIL)).thenReturn(false);
             Authentication auth = mockAuthentication(USER_EMAIL, "ROLE_USER");
 
             assertThat(messagingSecurity.areFriends(USER_EMAIL, OTHER_EMAIL, auth)).isFalse();
@@ -141,7 +144,7 @@ class MessagingSecurityTest {
             Authentication auth = mockAuthentication("admin@test.com", "ROLE_ADMIN");
 
             assertThat(messagingSecurity.areFriends("admin@test.com", OTHER_EMAIL, auth)).isTrue();
-            verify(friendshipRepository, never()).findByUserIdAndFriendId(any(), any());
+            verify(friendshipPort, never()).areFriends(any(), any());
         }
     }
 }
