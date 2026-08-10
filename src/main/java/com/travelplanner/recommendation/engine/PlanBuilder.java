@@ -25,6 +25,7 @@ public class PlanBuilder {
         
         // Variant A: Balanced
         List<TripActivity> balanced = slotAllocator.allocate(allScored, ctx);
+        java.util.Set<java.util.UUID> usedInBalanced = balanced.stream().map(TripActivity::getDestinationId).collect(Collectors.toSet());
         
         // Variant B: Food-focused
         List<ScoredDestination> foodBoosted = allScored.stream()
@@ -33,14 +34,35 @@ public class PlanBuilder {
                 boolean bFood = isFood(b.destination());
                 if (aFood && !bFood) return -1;
                 if (!aFood && bFood) return 1;
+                
+                // Penalize if already used in Balanced to create diversity
+                boolean aUsed = usedInBalanced.contains(a.destination().getId());
+                boolean bUsed = usedInBalanced.contains(b.destination().getId());
+                if (aUsed && !bUsed) return 1;
+                if (!aUsed && bUsed) return -1;
+                
                 return a.compareTo(b);
             })
             .collect(Collectors.toList());
         List<TripActivity> foodFocused = slotAllocator.allocate(foodBoosted, ctx);
+        java.util.Set<java.util.UUID> usedInFood = foodFocused.stream().map(TripActivity::getDestinationId).collect(Collectors.toSet());
         
         // Variant C: Budget-optimized
         List<ScoredDestination> budgetSorted = allScored.stream()
-            .sorted(Comparator.comparing(sd -> sd.destination().getAvgCostPerPerson() != null ? sd.destination().getAvgCostPerPerson() : BigDecimal.ZERO))
+            .sorted((a, b) -> {
+                BigDecimal costA = a.destination().getAvgCostPerPerson() != null ? a.destination().getAvgCostPerPerson() : BigDecimal.ZERO;
+                BigDecimal costB = b.destination().getAvgCostPerPerson() != null ? b.destination().getAvgCostPerPerson() : BigDecimal.ZERO;
+                int costComparison = costA.compareTo(costB);
+                if (costComparison != 0) return costComparison;
+
+                // Keep some diversity only when two destinations cost the same.
+                boolean aUsed = usedInBalanced.contains(a.destination().getId()) || usedInFood.contains(a.destination().getId());
+                boolean bUsed = usedInBalanced.contains(b.destination().getId()) || usedInFood.contains(b.destination().getId());
+                if (aUsed && !bUsed) return 1;
+                if (!aUsed && bUsed) return -1;
+                
+                return a.compareTo(b);
+            })
             .collect(Collectors.toList());
         List<TripActivity> budgetOpt = slotAllocator.allocate(budgetSorted, ctx);
 

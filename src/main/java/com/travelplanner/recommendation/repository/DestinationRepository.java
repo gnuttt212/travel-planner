@@ -18,4 +18,7 @@ public interface DestinationRepository extends JpaRepository<Destination, UUID> 
     List<String> findDistinctCities();
 
     List<Destination> findByCategoryAndCityAndIndoorTrue(DestinationCategory category, String city);
+
+    /** Find a destination by city and name (case-insensitive) for dedup during external enrichment */
+    Optional<Destination> findByCityAndNameIgnoreCase(String city, String name);
 }
