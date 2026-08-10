@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import api from '../api';
+import TripMap from '../components/TripMap';
 
 interface Waypoint {
   id: string; // Sortable needs unique id
@@ -29,9 +30,9 @@ const loadInitialWaypoints = (): Waypoint[] => {
   }
 
   return [
-    { id: '1', destinationId: '1', name: 'Hội An', latitude: 15.88, longitude: 108.33 },
-    { id: '2', destinationId: '2', name: 'Đà Nẵng', latitude: 16.07, longitude: 108.22 },
-    { id: '3', destinationId: '3', name: 'Huế', latitude: 16.46, longitude: 107.59 },
+    { id: '1', destinationId: '1', name: 'Bãi biển Mỹ Khê', latitude: 16.0610, longitude: 108.2470 },
+    { id: '2', destinationId: '2', name: 'Cầu Rồng', latitude: 16.0613, longitude: 108.2263 },
+    { id: '3', destinationId: '3', name: 'Chợ Hàn Đà Nẵng', latitude: 16.0680, longitude: 108.2230 },
   ];
 };
 
@@ -105,28 +106,45 @@ const Planner: React.FC = () => {
   };
 
   return (
-    <div className="planner-container">
-      <h2>Day 1 Itinerary</h2>
-      <div className="planner-actions">
-        <button onClick={handleOptimize} disabled={optimizing} className="primary-btn">
-          {optimizing ? 'Optimizing via ORS...' : '✨ Optimize Route Order'}
-        </button>
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-74px)] w-full">
+      {/* MAP SECTION */}
+      <div className="w-full h-[40vh] lg:h-full lg:flex-1 relative z-[1]">
+        <TripMap 
+          places={items.map(i => ({ 
+            name: i.name, 
+            latitude: i.latitude, 
+            longitude: i.longitude 
+          }))}
+          showPolyline={items.length > 1}
+        />
       </div>
-      
-      {stats.distance > 0 && (
-        <div className="route-stats">
-          Estimated Distance: {stats.distance.toFixed(1)} km | Duration: {Math.round(stats.duration)} mins
-        </div>
-      )}
 
-      <div className="dnd-container">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
-            {items.map(wp => (
-              <SortableItem key={wp.id} id={wp.id} wp={wp} />
-            ))}
-          </SortableContext>
-        </DndContext>
+      {/* PLANNER SECTION */}
+      <div className="w-full lg:w-[450px] bg-[var(--color-bg)] border-t lg:border-t-0 lg:border-l border-[var(--border-light)] flex flex-col z-[2] overflow-hidden">
+        <div className="p-6 overflow-y-auto h-full">
+          <h2>Day 1 Itinerary</h2>
+          <div className="planner-actions mb-4">
+            <button onClick={handleOptimize} disabled={optimizing} className="primary-btn w-full">
+              {optimizing ? 'Optimizing via ORS...' : '✨ Optimize Route Order'}
+            </button>
+          </div>
+          
+          {stats.distance > 0 && (
+            <div className="route-stats mb-4">
+              Estimated Distance: {stats.distance.toFixed(1)} km | Duration: {Math.round(stats.duration)} mins
+            </div>
+          )}
+
+          <div className="dnd-container">
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                {items.map(wp => (
+                  <SortableItem key={wp.id} id={wp.id} wp={wp} />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </div>
+        </div>
       </div>
     </div>
   );

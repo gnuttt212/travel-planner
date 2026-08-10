@@ -1,28 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
 import { planningApi } from '../api';
 import type { TripPlanResponse, TravelContextRequest } from '../api';
-import L from 'leaflet';
-
-// Fix for default marker icon in react-leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
-
-const customIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
-
+import TripMap from '../components/TripMap';
 export default function Results() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -40,53 +20,50 @@ export default function Results() {
   if (!plans.length) return null;
 
   const currentPlan = plans[selectedIdx];
-  const mapCenter = currentPlan.activities.length > 0 
-    ? [currentPlan.activities[0].destinationLat, currentPlan.activities[0].destinationLon] as [number, number]
-    : [16.0544, 108.2022] as [number, number];
+  const places = currentPlan.activities.map(act => ({
+    name: act.destinationName,
+    latitude: act.destinationLat,
+    longitude: act.destinationLon,
+    plannedStartTime: act.plannedStartTime,
+    plannedEndTime: act.plannedEndTime,
+    estimatedCost: act.estimatedCost
+  }));
 
   const handleSelectPlan = async () => {
-    if (!state?.context) return;
+    if (!state?.context) {
+      alert('Dữ liệu chuyến đi không hợp lệ. Vui lòng tạo lại kế hoạch.');
+      return;
+    }
     setCreating(true);
     try {
-      // Create trip from the chosen context and plan
-      // We pass the context, the backend might use it to persist the selected variant.
-      // Wait, the API for createTrip just takes TravelContextRequest. 
-      // If we need to specify which variant, the API signature in api.ts is:
-      // createTrip: (data: TravelContextRequest)
-      // Actually we'll just pretend the context allows specifying variant, or maybe the backend just generates it.
-      // If the backend doesn't take variantName, we'll just send context.
-      const res = await planningApi.createTrip({ ...state.context, styles: [currentPlan.variantName] });
+      const payload = {
+        ...state.context,
+        variantName: currentPlan.variantName,
+      };
+      const res = await planningApi.createTrip(payload);
       navigate(`/trip/${res.data.data.id}`);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('Không thể tạo chuyến đi.');
+      const message = e.response?.data?.message || e.message || 'Không thể tạo chuyến đi.';
+      alert(message);
       setCreating(false);
     }
   };
 
-  const polylinePositions = currentPlan.activities.map(a => [a.destinationLat, a.destinationLon] as [number, number]);
-
   return (
     <div className="results-container">
       <div className="map-half">
-        <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          {currentPlan.activities.map((act, i) => (
-            <Marker key={act.id || i} position={[act.destinationLat, act.destinationLon]} icon={customIcon}>
-              <Popup>
-                <strong>{act.destinationName}</strong><br/>
-                {act.plannedStartTime} - {act.plannedEndTime}<br/>
-                {act.estimatedCost.toLocaleString()}đ
-              </Popup>
-            </Marker>
-          ))}
-          {polylinePositions.length > 1 && (
-            <Polyline positions={polylinePositions} color="#8b5cf6" weight={4} opacity={0.7} />
+        <TripMap 
+          places={places} 
+          showPolyline={places.length > 1}
+          popupRender={(place) => (
+            <>
+              <strong>{place.name}</strong><br/>
+              {place.plannedStartTime} - {place.plannedEndTime}<br/>
+              {place.estimatedCost.toLocaleString()}đ
+            </>
           )}
-        </MapContainer>
+        />
       </div>
       
       <div className="variants-half">

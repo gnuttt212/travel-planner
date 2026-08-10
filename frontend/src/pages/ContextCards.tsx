@@ -54,9 +54,15 @@ export default function ContextCards() {
     { name: 'Hà Nội', lat: 21.0278, lon: 105.8342 },
     { name: 'Đà Nẵng', lat: 16.0544, lon: 108.2022 },
     { name: 'Huế', lat: 16.4637, lon: 107.5909 },
+    { name: 'Hội An', lat: 15.8780, lon: 108.3290 },
     { name: 'Nha Trang', lat: 12.2388, lon: 109.1967 },
     { name: 'Đà Lạt', lat: 11.9404, lon: 108.4583 },
     { name: 'Cần Thơ', lat: 10.0452, lon: 105.7469 },
+    { name: 'Vũng Tàu', lat: 10.3390, lon: 107.0840 },
+    { name: 'Phú Quốc', lat: 10.1680, lon: 103.9770 },
+    { name: 'Sa Pa', lat: 22.3365, lon: 103.8430 },
+    { name: 'Hạ Long', lat: 20.9500, lon: 107.0800 },
+    { name: 'Ninh Bình', lat: 20.2500, lon: 105.9500 },
   ];
 
   const toRad = (deg: number) => deg * Math.PI / 180;
@@ -81,6 +87,15 @@ export default function ContextCards() {
 
   const updateForm = (key: keyof TravelContextRequest, value: any) => {
     setFormData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const updateCity = (selectedCity: string) => {
+    const coords = CITY_COORDS.find(c => c.name === selectedCity);
+    setFormData(prev => ({
+      ...prev,
+      city: selectedCity,
+      ...(coords ? { startLat: coords.lat, startLon: coords.lon } : {})
+    }));
   };
 
   const { contextSafe } = useGSAP({ scope: containerRef });
@@ -292,7 +307,7 @@ export default function ContextCards() {
               <LocationTransport
                 cities={cities}
                 city={formData.city as string | undefined}
-                onCityChange={(c) => updateForm('city', c)}
+                onCityChange={updateCity}
                 transportation={formData.transportation as any}
                 onTransportationChange={(t) => updateForm('transportation', t)}
                 onUseCurrentLocation={(lat, lon) => {
@@ -325,7 +340,7 @@ export default function ContextCards() {
               <button className="glass-btn" onClick={prevStep} disabled={loading}>Quay lại</button>
             )}
             <button className="primary-btn pulse-btn" onClick={nextStep} disabled={loading}>
-              {loading ? 'Đang tải...' : step === 4 ? 'Bắt đầu lên lịch 🚀' : 'Tiếp tục'}
+              {loading ? 'Đang tải...' : step === 4 ? 'Bắt đầu lên lịch ' : 'Tiếp tục'}
             </button>
           </div>
         </div>

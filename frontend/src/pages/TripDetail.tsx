@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { planningApi, messagingApi } from '../api';
+import { planningApi } from '../api';
 import type { TripResponse } from '../api';
 
 const getCategoryIcon = (cat: string) => {
@@ -18,9 +18,6 @@ export default function TripDetail() {
   const navigate = useNavigate();
   const [trip, setTrip] = useState<TripResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [comments, setComments] = useState<any[]>([]);
-  const [newComment, setNewComment] = useState('');
-  const [reactions, setReactions] = useState<Record<string, any[]>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,8 +26,6 @@ export default function TripDetail() {
         .then(res => {
           setTrip(res.data.data);
           setLoading(false);
-          // load comments
-          messagingApi.listComments(id).then(cres => setComments(cres.data.data || [])).catch(() => {});
         })
         .catch(() => {
           setError('Không tìm thấy chuyến đi hoặc bạn không có quyền xem.');
@@ -39,34 +34,6 @@ export default function TripDetail() {
     }
   }, [id, navigate]);
 
-  const postComment = async () => {
-    if (!id || !newComment.trim()) return;
-    try {
-      const res = await messagingApi.addComment(id, newComment.trim());
-      setComments((s) => [...s, res.data.data]);
-      setNewComment('');
-    } catch {
-      alert('Không thể thêm bình luận');
-    }
-  };
-
-  const loadReactions = async (commentId: string) => {
-    try {
-      const res = await messagingApi.listReactions('COMMENT', commentId);
-      setReactions(r => ({...r, [commentId]: res.data.data || []}));
-    } catch {
-      // Ignore reaction loading failures.
-    }
-  };
-
-  const reactToComment = async (commentId: string, type: string) => {
-    try {
-      await messagingApi.react('COMMENT', commentId, type);
-      await loadReactions(commentId);
-    } catch {
-      // Ignore reaction submission failures.
-    }
-  };
 
   const handleExport = async () => {
     if (!id) return;
@@ -144,37 +111,6 @@ export default function TripDetail() {
       </div>
 
       <div className="trip-summary glass-panel">
-              <div className="trip-summary glass-panel mt-4">
-                <h3>Bình luận</h3>
-                <div>
-                  <textarea className="glass-input" rows={3} value={newComment} onChange={e => setNewComment(e.target.value)} />
-                  <div style={{marginTop:8}}>
-                    <button className="primary-btn" onClick={postComment}>Gửi bình luận</button>
-                  </div>
-                </div>
-                <div style={{marginTop:12}}>
-                  {comments.map(c => (
-                    <div key={c.id} className="user-item" style={{marginBottom:8}}>
-                      <div>
-                        <div style={{fontWeight:600}}>{c.authorEmail}</div>
-                        <div style={{color:'#cbd5e1'}}>{new Date(c.createdAt).toLocaleString()}</div>
-                        <div style={{marginTop:6}}>{c.content}</div>
-                        <div style={{marginTop:8, display:'flex', gap:8}}>
-                          <button className="glass-btn" onClick={() => reactToComment(c.id, 'LIKE')}>👍</button>
-                          <button className="glass-btn" onClick={() => reactToComment(c.id, 'LOVE')}>❤️</button>
-                          <button className="glass-btn" onClick={() => reactToComment(c.id, 'LAUGH')}>😂</button>
-                          <button className="glass-btn" onClick={() => loadReactions(c.id)}>Xem phản ứng</button>
-                        </div>
-                        <div style={{marginTop:6}}>
-                          {(reactions[c.id] || []).map(r => (
-                            <span key={r.id} style={{marginRight:8, fontSize:12}}>{r.authorEmail}:{r.type}</span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
         <h3>Tổng kết chuyến đi</h3>
         <div className="summary-stats">
           <div className="stat">

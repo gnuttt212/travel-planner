@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-type Transport = 'MOTORBIKE' | 'CAR' | 'PUBLIC';
+type Transport = 'MOTORBIKE' | 'CAR' | 'PUBLIC_TRANSPORT';
 
 type Props = {
   cities: string[];
@@ -29,6 +29,8 @@ export default function LocationTransport({
   const [filtered, setFiltered] = useState<string[]>([]);
   const [activeIndex, setActiveIndex] = useState(-1);
 
+  // 1. Thêm wrapperRef
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
 
@@ -45,6 +47,25 @@ export default function LocationTransport({
     setFiltered(cities.filter(c => c.toLowerCase().includes(q)).slice(0, 8));
     setActiveIndex(0);
   }, [query, cities]);
+
+  // 2. Đóng dropdown khi click ra ngoài
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(target)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const choose = (c: string) => {
     setQuery(c);
@@ -89,7 +110,12 @@ export default function LocationTransport({
         {/* Combobox */}
         <div className="mb-4">
           <label className="block text-sm text-slate-300 mb-2">Thành phố</label>
-          <div className="relative">
+          
+          {/* 3. Bọc Combobox bằng wrapperRef */}
+          <div
+            ref={wrapperRef}
+            className="relative"
+          >
             <input
               ref={inputRef}
               role="combobox"
@@ -103,6 +129,11 @@ export default function LocationTransport({
               onFocus={() => setOpen(true)}
               onKeyDown={handleKeyDown}
             />
+            
+            {/* 6. Thêm nút mũi tên ▼ */}
+            <div className="absolute right-12 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+              {open ? "▲" : "▼"}
+            </div>
 
             {/* geo icon button inside input (right) */}
             <button
@@ -115,25 +146,55 @@ export default function LocationTransport({
             </button>
 
             {/* dropdown list */}
-            {open && filtered.length > 0 && (
+            {/* 5. Hiển thị khi không tìm thấy */}
+            {open && (
               <div
                 id="city-listbox"
                 role="listbox"
                 ref={listRef}
-                className="mt-2 max-h-60 overflow-auto bg-[#061226] border border-gray-700 rounded-lg shadow-lg z-10"
+                // 4. Dropdown hiển thị đẹp hơn
+                className="
+                  absolute
+                  left-0
+                  right-0
+                  mt-2
+                  max-h-60
+                  overflow-y-auto
+                  rounded-xl
+                  border
+                  border-gray-700
+                  bg-[#061226]
+                  shadow-xl
+                  z-50
+                  animate-in
+                  fade-in
+                  slide-in-from-top-2
+                "
               >
                 {filtered.map((c, idx) => (
                   <div
                     key={c}
                     role="option"
                     aria-selected={idx === activeIndex}
-                    className={`px-4 py-3 cursor-pointer text-slate-100 hover:bg-indigo-600/20 ${idx === activeIndex ? 'bg-indigo-600/25' : ''}`}
+                    // 7. Cho item đang chọn nổi bật hơn
+                    className={`px-4 py-3 cursor-pointer transition-colors ${
+                      idx === activeIndex
+                        ? "bg-indigo-600 text-white"
+                        : "text-slate-200 hover:bg-slate-800"
+                    }`}
                     onMouseDown={(e) => { e.preventDefault(); choose(c); }}
                     onMouseEnter={() => setActiveIndex(idx)}
                   >
                     {c}
                   </div>
                 ))}
+
+                {/* 5. Phần hiển thị khi không tìm thấy */}
+                {filtered.length === 0 && (
+                  <div className="px-4 py-3 text-slate-400 text-sm">
+                    Không tìm thấy thành phố
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -146,7 +207,7 @@ export default function LocationTransport({
             {[
               { id: 'MOTORBIKE', label: '🏍️ Xe máy' },
               { id: 'CAR', label: '🚗 Ô tô' },
-              { id: 'PUBLIC', label: '🚌 Công cộng' },
+              { id: 'PUBLIC_TRANSPORT', label: '🚌 Công cộng' },
             ].map((t) => {
               const tid = t.id as Transport;
               const active = transportation === tid;
