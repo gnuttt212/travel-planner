@@ -1,6 +1,8 @@
 target/
 node_modules/
 frontend/dist/
+/package.json
+/package-lock.json
 *.class
 *.log
 .idea/
