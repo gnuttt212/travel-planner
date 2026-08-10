@@ -12,6 +12,7 @@ import com.travelplanner.identity.dto.UserSearchResult;
 import com.travelplanner.identity.repository.FriendRequestRepository;
 import com.travelplanner.identity.repository.FriendshipRepository;
 import com.travelplanner.identity.repository.UserRepository;
+import com.travelplanner.common.port.FriendshipPort;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class FriendService {
+public class FriendService implements FriendshipPort {
     private final FriendshipRepository friendshipRepository;
     private final FriendRequestRepository friendRequestRepository;
     private final UserRepository userRepository;
@@ -96,6 +97,17 @@ public class FriendService {
                     }
                 });
 
+        // Kiểm tra xem người kia đã gửi lời mời cho mình chưa (trạng thái PENDING)
+        // Nếu có, tự động accept thay vì tạo thêm 1 request rác
+        // Tránh 2 lời mời chờ nhau vô ích khi 2 người gửi lời mời cho nhau gần như đồng thời
+        java.util.Optional<FriendRequest> oppositeRequest = friendRequestRepository
+                .findBySenderEmailAndReceiverEmail(receiver.getEmail(), senderEmail);
+        
+        if (oppositeRequest.isPresent() && oppositeRequest.get().getStatus() == FriendRequestStatus.PENDING) {
+            respondToFriendRequest(senderEmail, oppositeRequest.get().getId(), true);
+            return;
+        }
+
         FriendRequest friendRequest = friendRequestRepository.save(FriendRequest.builder()
                 .senderEmail(senderEmail)
                 .receiverEmail(receiver.getEmail())
@@ -144,8 +156,9 @@ public class FriendService {
 
     /**
      * Kiểm tra hai user có phải là bạn bè hay không.
-     * Method public để các module khác (Messaging) sử dụng.
+     * Implement từ FriendshipPort để các module khác sử dụng (VD: Planning, Messaging).
      */
+    @Override
     public boolean areFriends(String emailA, String emailB) {
         return friendshipRepository.findByUserIdAndFriendId(emailA, emailB).isPresent();
     }

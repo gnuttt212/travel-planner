@@ -37,6 +37,9 @@ public class CacheConfig {
                 .cacheDefaults(defaultConfig)
                 .withCacheConfiguration("weatherCache", weatherConfig)
                 .withCacheConfiguration("aiNarrativeCache", aiNarrativeConfig)
+                .withCacheConfiguration("geocodingCache", defaultConfig)
+                .withCacheConfiguration("osrmRoutes", defaultConfig)
+                .withCacheConfiguration("overpassSearch", aiNarrativeConfig) // 7-day TTL, same as AI narrative
                 .build();
     }
 }

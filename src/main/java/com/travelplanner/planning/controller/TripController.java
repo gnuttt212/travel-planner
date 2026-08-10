@@ -6,8 +6,10 @@ import com.travelplanner.planning.domain.*;
 import com.travelplanner.planning.dto.*;
 import com.travelplanner.planning.security.TripSecurity;
 import com.travelplanner.planning.service.TripService;
-import com.travelplanner.recommendation.domain.TripPlanVariant;
-import com.travelplanner.recommendation.service.RecommendationService;
+import com.travelplanner.planning.service.TripActivityMapper;
+import com.travelplanner.common.dto.RecommendationRequest;
+import com.travelplanner.common.dto.RecommendationVariantResponse;
+import com.travelplanner.planning.port.RecommendationPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -21,17 +23,30 @@ import org.springframework.security.access.prepost.PreAuthorize;
 @RequiredArgsConstructor
 public class TripController {
     
-    private final RecommendationService recommendationService;
+    private final RecommendationPort recommendationPort;
     private final TripService tripService;
     private final TripSecurity tripSecurity;
+    private final TripActivityMapper activityMapper;
     
     @PostMapping("/planning/recommend")
     public ApiResponse<List<TripPlanResponse>> recommend(@RequestBody TripRequest request) {
-        TravelContext ctx = request.toTravelContext();
-        List<TripPlanVariant> variants = recommendationService.recommend(ctx, request.city());
+        RecommendationRequest recRequest = RecommendationRequest.builder()
+                .city(request.city())
+                .startLat(request.startLat())
+                .startLon(request.startLon())
+                .transportationType(request.transportation())
+                .date(request.tripDate())
+                .styles(request.styles())
+                .budgetPerPerson(request.budgetPerPerson())
+                .durationType(request.duration())
+                .build();
+        
+        List<RecommendationVariantResponse> variants = recommendationPort.recommend(recRequest);
         
         List<TripPlanResponse> response = variants.stream()
-            .map(v -> new TripPlanResponse(v.name(), v.description(), v.activities(), v.totalCost(), v.totalDistanceKm()))
+            .map(v -> new TripPlanResponse(v.getVariantName(), v.getVariantDescription(), 
+                v.getActivities().stream().map(activityMapper::toTripActivity).collect(Collectors.toList()), 
+                v.getTotalCost(), v.getTotalDistanceKm()))
             .collect(Collectors.toList());
         
         return ApiResponse.success(response);
@@ -83,6 +98,16 @@ public class TripController {
         List<Trip> visibleTrips = tripSecurity.getVisibleTrips(email, viewerEmail, authentication);
         List<TripResponse> resp = visibleTrips.stream().map(this::toResponse).collect(Collectors.toList());
         return ApiResponse.success(resp);
+    }
+
+    @PatchMapping("/trips/{tripId}/activities/reorder")
+    @PreAuthorize("@tripSecurity.isOwner(#tripId, authentication.name) or hasRole('ADMIN')")
+    public ApiResponse<TripResponse> reorderActivities(
+            @PathVariable UUID tripId,
+            @RequestBody List<UUID> activityIdsInNewOrder
+    ) {
+        Trip updated = tripService.reorderActivities(tripId, activityIdsInNewOrder);
+        return ApiResponse.success(toResponse(updated));
     }
     
     private TripResponse toResponse(Trip trip) {

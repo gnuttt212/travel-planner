@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(255) PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     display_name VARCHAR(255),
@@ -13,8 +13,8 @@ CREATE TABLE users (
 );
 
 CREATE TABLE user_preferences (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL UNIQUE,
+    id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL UNIQUE,
     tag_weights JSONB,
     min_budget NUMERIC,
     max_budget NUMERIC,
@@ -27,7 +27,7 @@ CREATE TABLE user_preferences (
 
 CREATE TABLE trips (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_id UUID,
+    owner_id VARCHAR(255),
     title VARCHAR(255),
     status VARCHAR(50),
     trip_date DATE,
@@ -84,7 +84,7 @@ CREATE TABLE destinations (
 );
 
 CREATE TABLE friend_requests (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(255) PRIMARY KEY,
     sender_email VARCHAR(255) NOT NULL,
     receiver_email VARCHAR(255) NOT NULL,
     status VARCHAR(50) NOT NULL,
@@ -94,17 +94,17 @@ CREATE TABLE friend_requests (
 );
 
 CREATE TABLE friendships (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL,
-    friend_id UUID NOT NULL,
+    id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
+    friend_id VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE,
     updated_at TIMESTAMP WITH TIME ZONE,
     UNIQUE (user_id, friend_id)
 );
 
 CREATE TABLE budgets (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    itinerary_id UUID NOT NULL,
+    id VARCHAR(255) PRIMARY KEY,
+    itinerary_id VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     total_amount NUMERIC,
     currency VARCHAR(50),
@@ -113,8 +113,8 @@ CREATE TABLE budgets (
 );
 
 CREATE TABLE expenses (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    budget_id UUID NOT NULL,
+    id VARCHAR(255) PRIMARY KEY,
+    budget_id VARCHAR(255) NOT NULL,
     title VARCHAR(255) NOT NULL,
     amount NUMERIC NOT NULL,
     category VARCHAR(255),
@@ -133,7 +133,7 @@ CREATE TABLE messages (
 
 CREATE TABLE comments (
     id VARCHAR(255) PRIMARY KEY,
-    trip_id UUID NOT NULL,
+    trip_id VARCHAR(255) NOT NULL,
     author_email VARCHAR(255) NOT NULL,
     content VARCHAR(2000) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL

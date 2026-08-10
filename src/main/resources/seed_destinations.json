@@ -1579,7 +1579,7 @@
     "longitude": 107.0790,
     "avgRating": 4.3,
     "reviewCount": 890,
-    "avgCostPerPerson": 45000,
+    "avgCostPerPerson": 40000,
     "tags": "[\"food\",\"street_food\",\"local\",\"banh-khot\"]",
     "openingHours": "{\"mon\":\"10:00-20:00\",\"tue\":\"10:00-20:00\",\"wed\":\"10:00-20:00\",\"thu\":\"10:00-20:00\",\"fri\":\"10:00-20:00\",\"sat\":\"10:00-20:00\",\"sun\":\"10:00-20:00\"}",
     "indoor": true,

@@ -7,6 +7,7 @@ import TripDetail from './pages/TripDetail';
 import MyTrips from './pages/MyTrips';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
+import Planner from './pages/Planner';
 import './index.css';
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login onLoginSuccess={() => setToken(localStorage.getItem('token'))} />} />
             <Route path="/plan/new" element={token ? <ContextCards /> : <Navigate to="/login" />} />
+            <Route path="/plan/selected" element={token ? <Planner /> : <Navigate to="/login" />} />
             <Route path="/plan/results" element={token ? <Results /> : <Navigate to="/login" />} />
             <Route path="/trip/:id" element={token ? <TripDetail /> : <Navigate to="/login" />} />
             <Route path="/trips" element={token ? <MyTrips /> : <Navigate to="/login" />} />

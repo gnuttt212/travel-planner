@@ -1,6 +1,7 @@
 package com.travelplanner.planning.security;
 
-import com.travelplanner.identity.repository.FriendshipRepository;
+import com.travelplanner.common.port.FriendshipPort;
+import com.travelplanner.common.port.TripAccessPort;
 import com.travelplanner.planning.domain.Trip;
 import com.travelplanner.planning.domain.TripVisibility;
 import com.travelplanner.planning.repository.TripRepository;
@@ -29,10 +30,10 @@ import java.util.stream.Collectors;
  */
 @Component("tripSecurity")
 @RequiredArgsConstructor
-public class TripSecurity {
+public class TripSecurity implements TripAccessPort {
 
     private final TripRepository tripRepository;
-    private final FriendshipRepository friendshipRepository;
+    private final FriendshipPort friendshipPort;
 
     /**
      * Kiểm tra user có phải owner của trip hay không.
@@ -77,6 +78,21 @@ public class TripSecurity {
         }
     }
 
+    @Override
+    public boolean canView(String tripId, String userEmail) {
+        return canViewByStringId(tripId, userEmail);
+    }
+
+    @Override
+    public boolean isOwner(String tripId, String userEmail) {
+        try {
+            UUID uuid = UUID.fromString(tripId);
+            return isOwner(uuid, userEmail);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     /**
      * Trả về danh sách trip mà viewer được phép xem từ ownerEmail.
      * Logic:
@@ -95,7 +111,7 @@ public class TripSecurity {
             return allTrips;
         }
 
-        boolean isFriend = friendshipRepository.findByUserIdAndFriendId(viewerEmail, ownerEmail).isPresent();
+        boolean isFriend = friendshipPort.areFriends(viewerEmail, ownerEmail);
 
         return allTrips.stream()
                 .filter(trip -> {
@@ -136,8 +152,7 @@ public class TripSecurity {
 
         return switch (visibility) {
             case PUBLIC -> true;
-            case FRIENDS_ONLY ->
-                    friendshipRepository.findByUserIdAndFriendId(userEmail, trip.getOwnerId()).isPresent();
+            case FRIENDS_ONLY -> friendshipPort.areFriends(userEmail, trip.getOwnerId());
             case PRIVATE -> false;
         };
     }

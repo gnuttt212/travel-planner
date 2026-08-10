@@ -4,9 +4,13 @@ import com.travelplanner.planning.domain.TravelContext;
 import com.travelplanner.recommendation.domain.CompositeScore;
 import com.travelplanner.recommendation.domain.Destination;
 import org.springframework.stereotype.Component;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.*;
 import java.time.format.TextStyle;
 import java.util.*;
+
+import com.travelplanner.planning.domain.Transportation;
 
 @Component
 public class ScoringEngine {
@@ -54,7 +58,7 @@ public class ScoringEngine {
     
     private double scoreDistance(Destination dest, TravelContext ctx) {
         double distance = haversineKm(ctx.startLat(), ctx.startLon(), dest.getLatitude(), dest.getLongitude());
-        double maxRadius = ctx.transportation().getMaxRadiusKm();
+        double maxRadius = effectiveTransportation(ctx).getMaxRadiusKm();
         return Math.max(0, 1.0 - (distance / maxRadius));
     }
     
@@ -98,12 +102,32 @@ public class ScoringEngine {
     
     private double scoreBudget(Destination dest, TravelContext ctx) {
         if (ctx.budgetPerPerson() == null) return 0.8; // unlimited budget
+        if (ctx.budgetPerPerson().compareTo(BigDecimal.ZERO) <= 0) return 0.0;
         if (dest.getAvgCostPerPerson() == null) return 0.5;
-        double ratio = dest.getAvgCostPerPerson().doubleValue() / ctx.budgetPerPerson().doubleValue();
+        BigDecimal targetCostPerStop = ctx.budgetPerPerson().divide(
+                BigDecimal.valueOf(targetActivityCount(ctx)),
+                2,
+                RoundingMode.HALF_UP);
+        double ratio = dest.getAvgCostPerPerson().doubleValue() / targetCostPerStop.doubleValue();
         if (ratio <= 0.7) return 1.0;
         if (ratio <= 1.0) return 0.7;
         if (ratio <= 1.3) return 0.3;
         return 0.0;
+    }
+
+    private int targetActivityCount(TravelContext ctx) {
+        if (ctx.duration() == null) {
+            return 1;
+        }
+        return switch (ctx.duration()) {
+            case HALF_DAY -> 3;
+            case FULL_DAY -> 5;
+            case MULTI_DAY -> 7;
+        };
+    }
+
+    private Transportation effectiveTransportation(TravelContext ctx) {
+        return ctx.transportation() != null ? ctx.transportation() : Transportation.MOTORBIKE;
     }
     
     private double haversineKm(double lat1, double lon1, double lat2, double lon2) {

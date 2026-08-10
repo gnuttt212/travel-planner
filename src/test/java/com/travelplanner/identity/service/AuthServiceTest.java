@@ -1,6 +1,6 @@
 package com.travelplanner.identity.service;
 
-import com.travelplanner.common.security.CustomUserDetails;
+import com.travelplanner.identity.security.CustomUserDetails;
 import com.travelplanner.common.security.JwtUtil;
 import com.travelplanner.identity.domain.Role;
 import com.travelplanner.identity.domain.User;

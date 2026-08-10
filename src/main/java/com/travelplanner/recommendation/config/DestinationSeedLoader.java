@@ -1,4 +1,4 @@
-package com.travelplanner.common.config;
+package com.travelplanner.recommendation.config;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,7 +17,7 @@ import java.util.*;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class SeedDataLoader implements CommandLineRunner {
+public class DestinationSeedLoader implements CommandLineRunner {
     
     private final DestinationRepository destinationRepository;
     private final ObjectMapper objectMapper;

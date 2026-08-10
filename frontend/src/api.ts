@@ -12,6 +12,7 @@ export interface TravelContextRequest {
   startLon: number;
   transportation: string;
   city: string;
+  variantName?: string;
 }
 
 export interface TripActivity {
@@ -72,6 +73,25 @@ export interface UserSearchResult {
   avatarUrl: string | null;
   relationshipStatus: string;
 }
+
+export interface Destination {
+  id: string;
+  name: string;
+  description: string;
+  city?: string;
+  address?: string;
+  category?: string | null;
+  latitude: number;
+  longitude: number;
+  avgRating: number;
+  reviewCount: number;
+  avgCostPerPerson?: number;
+  tags: string[];
+  indoor: boolean;
+  imageUrl?: string;
+  distanceKm?: number | null;
+}
+
 
 export interface FriendRequestDto {
   id: string;

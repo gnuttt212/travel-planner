@@ -5,7 +5,7 @@ import com.travelplanner.identity.domain.User;
 import com.travelplanner.identity.dto.AuthRequest;
 import com.travelplanner.identity.dto.AuthResponse;
 import com.travelplanner.identity.repository.UserRepository;
-import com.travelplanner.common.security.CustomUserDetails;
+import com.travelplanner.identity.security.CustomUserDetails;
 import com.travelplanner.common.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
