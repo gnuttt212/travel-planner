@@ -1,5 +1,6 @@
 package com.travelplanner.planning.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -13,8 +14,12 @@ public class TripActivity {
     @Id @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     
-    @Column(name = "trip_id")
-    private UUID tripId;
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "trip_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Trip trip;
     
     private UUID destinationId;
     private int orderIndex;

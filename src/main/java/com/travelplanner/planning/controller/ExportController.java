@@ -31,7 +31,6 @@ public class ExportController {
 
     @GetMapping("/{id}/export/ics")
     public ResponseEntity<byte[]> exportIcs(@PathVariable UUID id, Authentication authentication) {
-        // Ownership/visibility check trước khi export
         if (!tripSecurity.canView(id, authentication)) {
             throw AccessDeniedException.of("trip");
         }
@@ -48,14 +47,8 @@ public class ExportController {
         return ResponseEntity.ok().headers(headers).body(bytes);
     }
 
-    /**
-     * Endpoint bị thiếu trước đó: frontend (planningApi.exportPdf) gọi
-     * GET /api/v1/trips/{id}/export/pdf với responseType: 'blob', nhưng backend
-     * chưa có handler tương ứng -> sẽ trả về 404 Not Found khi gọi thực tế.
-     */
     @GetMapping("/{id}/export/pdf")
     public ResponseEntity<byte[]> exportPdf(@PathVariable UUID id, Authentication authentication) {
-        // Ownership/visibility check trước khi export
         if (!tripSecurity.canView(id, authentication)) {
             throw AccessDeniedException.of("trip");
         }
@@ -67,7 +60,6 @@ public class ExportController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDispositionFormData("attachment", "trip_" + id + ".pdf");
-        // Ngăn trình duyệt/proxy cache file PDF export theo yêu cầu tức thời
         headers.setCacheControl("no-store");
 
         return ResponseEntity.ok().headers(headers).body(pdfBytes);

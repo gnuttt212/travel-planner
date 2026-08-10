@@ -1,4 +1,4 @@
-package com.travelplanner.common.security;
+package com.travelplanner.identity.security;
 
 import com.travelplanner.identity.domain.User;
 import lombok.Getter;

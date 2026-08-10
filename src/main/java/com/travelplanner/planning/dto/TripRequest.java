@@ -16,7 +16,8 @@ public record TripRequest(
         double startLat,
         double startLon,
         String transportation,
-        String city) {
+        String city,
+        String variantName) {
     public TravelContext toTravelContext() {
         try {
             return new TravelContext(
@@ -29,7 +30,7 @@ public record TripRequest(
                     styles,
                     startLat,
                     startLon,
-                    Transportation.valueOf(transportation));
+                    Transportation.fromApiValue(transportation));
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Giá trị không hợp lệ: " + e.getMessage());
         }

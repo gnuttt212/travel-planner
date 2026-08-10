@@ -16,14 +16,17 @@ public class Trip {
     private String title;
     
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private TripStatus status;
     
     private LocalDate tripDate;
     
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private TripDuration duration;
     
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private TripPurpose purpose;
     
     private int groupSize;
@@ -31,15 +34,16 @@ public class Trip {
     private double startLon;
     
     @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private Transportation transportation;
 
     /** Mức độ hiển thị: PUBLIC / FRIENDS_ONLY / PRIVATE. Default PRIVATE cho backward-compatible. */
     @Enumerated(EnumType.STRING)
     @Builder.Default
+    @Column(nullable = false, length = 20)
     private TripVisibility visibility = TripVisibility.PRIVATE;
     
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "trip_id")
+    @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("orderIndex")
     @Builder.Default
     private List<TripActivity> activities = new ArrayList<>();
