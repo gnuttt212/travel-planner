@@ -44,6 +44,12 @@ This document lists the REST API endpoints available in Travel Planner, grouped 
       - `GET /{id}/export/pdf`
   - `/destinations`
     - `GET /cities`
+  - `/budgets`
+    - `POST /{budgetId}/expenses`
+    - `GET /{budgetId}/expenses`
+    - `GET /{budgetId}/summary`
+  - `/onboarding`
+    - `POST /`
   - `/admin`
     - `GET /users`
 
@@ -211,6 +217,30 @@ This document lists the REST API endpoints available in Travel Planner, grouped 
 ### GET /api/v1/destinations/cities
 - Response: `ApiResponse<List<String>>`
 - Description: Get the list of distinct destination cities.
+
+## Budget
+
+**Lưu ý Bảo mật**: Budget chỉ owner của Trip liên kết mới được truy cập, không áp dụng theo TripVisibility (bạn bè/người lạ KHÔNG được xem kể cả khi Trip PUBLIC/FRIENDS_ONLY). ADMIN được phép bypass.
+
+### POST /api/v1/budgets/{budgetId}/expenses
+- Request: `Expense` (`budgetId`, `category`, `amount`, `note`)
+- Response: `ApiResponse<Expense>`
+- Description: Add an expense to a specific budget.
+
+### GET /api/v1/budgets/{budgetId}/expenses
+- Response: `ApiResponse<List<Expense>>`
+- Description: List all expenses for a budget.
+
+### GET /api/v1/budgets/{budgetId}/summary
+- Response: `ApiResponse<List<ExpenseSummaryDto>>`
+- Description: Get expense summary grouped by category for a budget.
+
+## Onboarding
+
+### POST /api/v1/onboarding
+- Request: `OnboardingRequest`
+- Response: `ApiResponse<UserPreference>`
+- Description: Submit onboarding answers to save user travel preferences.
 
 ## Admin
 

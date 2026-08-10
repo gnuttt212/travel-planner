@@ -8,12 +8,17 @@ spring:
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maxLifetime: 1800000
+      validationTimeout: 5000
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
     baseline-version: 1
     table: flyway_schema_history
+    connectRetries: 10
+    connectRetryInterval: 5s
   sql:
     init:
       mode: never
@@ -55,6 +60,14 @@ openweathermap:
     url: "https://api.openweathermap.org/data/2.5/forecast"
     key: ${OPENWEATHERMAP_API_KEY:}
 
+nominatim:
+  api:
+    url: ${NOMINATIM_API_URL:https://nominatim.openstreetmap.org/search}
+
+osrm:
+  api:
+    url: ${OSRM_API_URL:https://router.project-osrm.org}
+
 gemini:
   api:
     url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
@@ -67,3 +80,14 @@ app:
   admin:
     email: ${APP_ADMIN_EMAIL:admin@localhost}
     password: ${APP_ADMIN_PASSWORD:admin}
+
+overpass:
+  api:
+    url: ${OVERPASS_API_URL:https://overpass-api.de/api/interpreter}
+
+destination:
+  dynamic-search:
+    enabled: true
+    min-candidates-threshold: 5
+    search-radius-km: 5.0
+    max-results: 30

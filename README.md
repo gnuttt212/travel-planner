@@ -24,11 +24,14 @@ Travel Planner giúp người dùng tạo lịch trình du lịch cá nhân hóa
 
 ## 🏗️ Kiến trúc hệ thống
 
-Hệ thống được thiết kế theo kiến trúc **Modular Monolith** cực kỳ tinh gọn và dễ mở rộng, bao gồm 3 module độc lập:
+Hệ thống được thiết kế theo kiến trúc **Modular Monolith** với 6 module giao tiếp qua Port/Interface, không có circular dependency:
 
-1. **`identity`**: Quản lý thông tin người dùng, xác thực (Authentication), và sở thích du lịch (Preferences).
-2. **`planning`**: Quản lý các Domain Entity chính như `Trip`, `TripActivity` và `TravelContext`.
-3. **`recommendation`**: Trái tim của hệ thống chứa `ScoringEngine`, `SlotAllocator`, và logic lập kế hoạch tự động (`PlanBuilder`).
+1. **`identity`**: Quản lý người dùng, xác thực JWT/Spring Security, mạng lưới bạn bè, và sở thích du lịch (Preferences). Entity: `User`, `Friendship`, `FriendRequest`, `UserPreference`.
+2. **`planning`**: Quản lý chuyến đi và lịch trình. Entity: `Trip`, `TripActivity`. Giao tiếp với `recommendation` qua `RecommendationPort`.
+3. **`recommendation`**: Động cơ AI sinh lịch trình tự động — `ScoringEngine` (đánh giá đa biến), `SlotAllocator` (sắp xếp slot thời gian), `PlanBuilder` (tạo biến thể lịch trình). Entity: `Destination`. Tích hợp OpenRouteService, OpenWeatherMap, Gemini AI.
+4. **`messaging`**: Giao tiếp xã hội — chat giữa người dùng, bình luận trên chuyến đi, và reaction. Entity: `Message`, `Comment`, `Reaction`. Giao tiếp với `planning` qua `TripAccessPort`.
+5. **`budget`**: Quản lý ngân sách và chi tiêu thực tế cho từng chuyến đi. Entity: `Budget`, `Expense`. Hoạt động độc lập, tham chiếu chuyến đi qua `itineraryId` (String).
+6. **`common`**: Thành phần dùng chung — exception, DTO, response wrapper, cấu hình bảo mật cơ sở, và các Port interface (`FriendshipPort`, `TripAccessPort`).
 
 ---
 
@@ -175,10 +178,10 @@ Frontend mặc định chạy tại:
 
 ## 🗺️ Lộ trình (Roadmap)
 
-- [x] **Phase 1 (MVP)**: Hoàn tất kiến trúc Modular Monolith, Context Cards UI, Scoring Engine tự động, Timeline View, và hệ thống seed data.
-- [ ] **Phase 2**: Tích hợp OpenRouteService API (tính toán khoảng cách chính xác thay vì đường chim bay) và OpenWeatherMap API (điều chỉnh lịch trình theo thời tiết).
+- [x] **Phase 1 (MVP)**: Hoàn tất kiến trúc Modular Monolith, Context Cards UI, Scoring Engine tự động, Timeline View, hệ thống seed data, mạng xã hội (bạn bè, chat, bình luận, reaction), và quản lý ngân sách.
+- [x] **Phase 2**: Tích hợp OpenRouteService API (tính toán khoảng cách/thời gian di chuyển thực tế, fallback Haversine khi API không khả dụng), OpenWeatherMap API (điều chỉnh lịch trình theo thời tiết thực), và Gemini AI (tạo narrative mô tả lịch trình). Cả 3 service đều có caching (`@Cacheable`) và graceful fallback.
 - [ ] **Phase 3**: Thêm tính năng kéo thả (Drag & Drop) vào Timeline để điều chỉnh lịch trình bằng tay. 
-- [ ] **Phase 4**: Xuất PDF / ICS và chia sẻ link lịch trình.
+- [x] **Phase 4**: Xuất ICS (calendar) và PDF cho lịch trình chuyến đi.
 
 ---
 

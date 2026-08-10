@@ -1,4 +1,6 @@
 target/
+node_modules/
+frontend/dist/
 *.class
 *.log
 .idea/
@@ -6,3 +8,5 @@ target/
 .vscode/
 .env
 HELP.md
+Test.java
+tmp_*.py
