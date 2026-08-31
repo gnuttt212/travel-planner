@@ -26,7 +26,7 @@ public class ScoringEngine {
     private static final int GLOBAL_AVG_REVIEW_COUNT = 50;
     
     public CompositeScore score(Destination dest, TravelContext ctx, boolean isRaining) {
-        double R = scoreRating(dest);
+        double R = scoreReliability(dest);
         double D = scoreDistance(dest, ctx);
         double H = scoreHours(dest, ctx);
         double U = scorePreference(dest, ctx);
@@ -46,14 +46,24 @@ public class ScoringEngine {
         return new CompositeScore(total, R, D, H, U, B);
     }
     
-    private double scoreRating(Destination dest) {
+    private double scoreReliability(Destination dest) {
         // Bayesian Average
         double C = GLOBAL_AVG_REVIEW_COUNT;
         double m = GLOBAL_AVG_RATING;
         double n = dest.getReviewCount();
         double sum = dest.getAvgRating() * n;
         double bayesian = (C * m + sum) / (C + n);
-        return (bayesian - 1.0) / 4.0; // normalize 1-5 → 0-1
+        
+        double score = (bayesian - 1.0) / 4.0; // normalize 1-5 → 0-1
+        
+        // Apply penalty for places with very few reviews to ensure reliability
+        if (n < 5) {
+            score = score * 0.5; // 50% penalty
+        } else if (n < 20) {
+            score = score * 0.8; // 20% penalty
+        }
+        
+        return Math.max(0.0, score);
     }
     
     private double scoreDistance(Destination dest, TravelContext ctx) {
@@ -91,13 +101,92 @@ public class ScoringEngine {
     }
     
     private double scorePreference(Destination dest, TravelContext ctx) {
-        if (ctx.styles() == null || ctx.styles().isEmpty()) return 0.5;
-        List<String> destTags = dest.getTagList();
-        if (destTags.isEmpty()) return 0.3;
-        long matches = ctx.styles().stream()
-            .filter(s -> destTags.stream().anyMatch(t -> t.equalsIgnoreCase(s)))
-            .count();
-        return (double) matches / ctx.styles().size();
+        double baseScore = 0.5;
+        
+        // Enhance base score if there are explicit styles provided by user
+        if (ctx.styles() != null && !ctx.styles().isEmpty()) {
+            List<String> destTags = dest.getTagList();
+            if (!destTags.isEmpty()) {
+                long matches = ctx.styles().stream()
+                    .filter(s -> destTags.stream().anyMatch(t -> t.equalsIgnoreCase(s)))
+                    .count();
+                baseScore = (double) matches / ctx.styles().size();
+            }
+        }
+        
+        // 1. Group Type Mapping
+        String groupType = ctx.groupType();
+        if (groupType != null) {
+            switch (groupType.toUpperCase()) {
+                case "FAMILY":
+                    if (dest.isIndoor()) baseScore += 0.2;
+                    if (hasAnyTag(dest, "kid-friendly", "family", "accessible", "spacious")) baseScore += 0.3;
+                    if (dest.getCategory() != null) {
+                        String cat = dest.getCategory().name();
+                        if (cat.equals("BAR") || cat.equals("STREET_FOOD")) baseScore -= 0.4;
+                    }
+                    break;
+                case "COUPLE":
+                    if (hasAnyTag(dest, "romantic", "private", "scenic", "quiet", "view")) baseScore += 0.3;
+                    if (dest.getCategory() != null && dest.getCategory().name().equals("VIEWPOINT")) baseScore += 0.2;
+                    break;
+                case "SOLO":
+                    if (hasAnyTag(dest, "street_food", "cafe", "cheap", "local")) baseScore += 0.2;
+                    break;
+                case "FRIENDS":
+                    if (hasAnyTag(dest, "bar", "entertainment", "group", "fun", "lively")) baseScore += 0.3;
+                    break;
+            }
+        }
+        
+        // 2. Trip Purpose Mapping
+        if (ctx.purpose() != null) {
+            switch (ctx.purpose().name()) {
+                case "PHOTOGRAPHY":
+                    if (dest.getCategory() != null) {
+                        String cat = dest.getCategory().name();
+                        if (cat.equals("VIEWPOINT") || cat.equals("GARDEN") || cat.equals("TEMPLE")) baseScore += 0.3;
+                    }
+                    if (hasAnyTag(dest, "scenic", "beautiful", "architecture", "photo")) baseScore += 0.3;
+                    break;
+                case "FOOD_EXPLORE":
+                    if (dest.getCategory() != null) {
+                        String cat = dest.getCategory().name();
+                        if (cat.equals("RESTAURANT") || cat.equals("STREET_FOOD") || cat.equals("MARKET")) baseScore += 0.3;
+                    }
+                    if (hasAnyTag(dest, "local_food", "famous", "specialty")) baseScore += 0.2;
+                    break;
+                case "RELAXATION":
+                    if (dest.getCategory() != null) {
+                        String cat = dest.getCategory().name();
+                        if (cat.equals("CAFE") || cat.equals("BEACH") || cat.equals("PARK")) baseScore += 0.3;
+                    }
+                    if (hasAnyTag(dest, "spa", "chill", "quiet", "relax")) baseScore += 0.2;
+                    break;
+                case "NATURE":
+                    if (dest.getCategory() != null) {
+                        String cat = dest.getCategory().name();
+                        if (cat.equals("PARK") || cat.equals("GARDEN") || cat.equals("BEACH") || cat.equals("VIEWPOINT")) baseScore += 0.3;
+                    }
+                    if (hasAnyTag(dest, "nature", "outdoor", "forest", "mountain")) baseScore += 0.2;
+                    if (!dest.isIndoor()) baseScore += 0.1;
+                    else baseScore -= 0.1;
+                    break;
+            }
+        }
+        
+        return Math.max(0.0, Math.min(1.0, baseScore));
+    }
+    
+    private boolean hasAnyTag(Destination dest, String... targetTags) {
+        List<String> tags = dest.getTagList();
+        if (tags == null || tags.isEmpty()) return false;
+        for (String target : targetTags) {
+            for (String tag : tags) {
+                if (tag.toLowerCase().contains(target.toLowerCase())) return true;
+            }
+        }
+        return false;
     }
     
     private double scoreBudget(Destination dest, TravelContext ctx) {

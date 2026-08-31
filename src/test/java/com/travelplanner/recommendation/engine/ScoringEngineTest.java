@@ -206,4 +206,103 @@ class ScoringEngineTest {
         // Indoor should be boosted when raining
         assertTrue(indoorScoreRain.total() > indoorScoreNoRain.total());
     }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("Địa điểm rating cao nhưng review ít (dưới 5) phải bị phạt điểm tin cậy")
+    void testReliability_HighRating_LowReviews_ShouldBePenalized() {
+        TravelContext ctx = TravelContext.builder().startLat(10.0).startLon(106.0).date(LocalDate.now()).build();
+        
+        // 5.0 sao nhưng chỉ có 2 reviews -> phải bị phạt 50%
+        Destination destLowReview = Destination.builder()
+                .id(UUID.randomUUID())
+                .avgRating(5.0)
+                .reviewCount(2)
+                .build();
+                
+        // 4.5 sao nhưng có 1000 reviews -> không bị phạt
+        Destination destHighReview = Destination.builder()
+                .id(UUID.randomUUID())
+                .avgRating(4.5)
+                .reviewCount(1000)
+                .build();
+                
+        CompositeScore scoreLow = engine.score(destLowReview, ctx, false);
+        CompositeScore scoreHigh = engine.score(destHighReview, ctx, false);
+        
+        // Dù rating cao hơn, nhưng ít review nên điểm reliability cuối cùng phải thấp hơn
+        assertTrue(scoreLow.ratingScore() < scoreHigh.ratingScore(), 
+            "Địa điểm ít review phải có điểm tin cậy thấp hơn địa điểm nhiều review");
+    }
+    
+    @Test
+    @org.junit.jupiter.api.DisplayName("Trường hợp không có review nào (reviewCount = 0) không được ném lỗi chia cho 0")
+    void testReliability_ZeroReviews_ShouldNotThrowException() {
+        TravelContext ctx = TravelContext.builder().startLat(10.0).startLon(106.0).date(LocalDate.now()).build();
+        
+        Destination destNoReview = Destination.builder()
+                .id(UUID.randomUUID())
+                .avgRating(0.0)
+                .reviewCount(0)
+                .build();
+                
+        assertDoesNotThrow(() -> {
+            CompositeScore score = engine.score(destNoReview, ctx, false);
+            assertTrue(score.ratingScore() >= 0.0);
+        });
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("Địa điểm rating trung bình nhưng review nhiều phải được ưu tiên hơn rating cao mà review mỏng")
+    void testReliability_AverageRating_HighReviews_Vs_HighRating_LowReviews() {
+        TravelContext ctx = TravelContext.builder().startLat(10.0).startLon(106.0).date(LocalDate.now()).build();
+        
+        // 4.0 sao, 2000 reviews
+        Destination destAvgRatingHighReview = Destination.builder()
+                .id(UUID.randomUUID())
+                .avgRating(4.0)
+                .reviewCount(2000)
+                .build();
+                
+        // 4.8 sao, 10 reviews -> Bị phạt 20%
+        Destination destHighRatingLowReview = Destination.builder()
+                .id(UUID.randomUUID())
+                .avgRating(4.8)
+                .reviewCount(10)
+                .build();
+                
+        CompositeScore score1 = engine.score(destAvgRatingHighReview, ctx, false);
+        CompositeScore score2 = engine.score(destHighRatingLowReview, ctx, false);
+        
+        assertTrue(score1.ratingScore() > score2.ratingScore(), 
+            "4.0 sao / 2000 review phải đáng tin cậy hơn 4.8 sao / 10 review");
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("Ưu tiên theo nhóm: Đi với gia đình (FAMILY) phải ưu tiên chỗ indoor, kid-friendly và phạt BAR")
+    void testPreference_FamilyGroup() {
+        TravelContext ctx = TravelContext.builder()
+                .startLat(10.0).startLon(106.0).date(LocalDate.now())
+                .groupType("FAMILY")
+                .build();
+
+        Destination familyFriendly = Destination.builder()
+                .id(UUID.randomUUID())
+                .indoor(true)
+                .tags("[\"kid-friendly\", \"spacious\"]")
+                .category(DestinationCategory.RESTAURANT)
+                .build();
+
+        Destination barDest = Destination.builder()
+                .id(UUID.randomUUID())
+                .indoor(false)
+                .category(DestinationCategory.BAR)
+                .tags("[\"loud\"]")
+                .build();
+
+        CompositeScore familyScore = engine.score(familyFriendly, ctx, false);
+        CompositeScore barScore = engine.score(barDest, ctx, false);
+
+        assertTrue(familyScore.preferenceScore() > barScore.preferenceScore(),
+                "Chỗ chơi gia đình phải có điểm sở thích cao hơn BAR");
+    }
 }

@@ -146,13 +146,29 @@ public class RecommendationService {
     }
 
     private List<Destination> filterReachableCandidates(List<Destination> candidates, TravelContext ctx) {
-        if (candidates.isEmpty() || !hasUsableStart(ctx)) {
+        if (candidates.isEmpty()) {
             return candidates;
         }
 
-        double maxRadiusKm = maxRouteRadiusKm(ctx);
+        java.math.BigDecimal maxAllowedCost = null;
+        if (ctx.budgetPerPerson() != null && ctx.budgetPerPerson().compareTo(java.math.BigDecimal.ZERO) > 0) {
+            // Hard filter: drop any single destination that costs more than 1.5x the TOTAL budget
+            maxAllowedCost = ctx.budgetPerPerson().multiply(java.math.BigDecimal.valueOf(1.5));
+        }
+        
+        final java.math.BigDecimal finalMaxCost = maxAllowedCost;
+
         return candidates.stream()
-                .filter(dest -> haversineKm(ctx.startLat(), ctx.startLon(), dest.getLatitude(), dest.getLongitude()) <= maxRadiusKm)
+                .filter(dest -> {
+                    if (finalMaxCost != null && dest.getAvgCostPerPerson() != null) {
+                        if (dest.getAvgCostPerPerson().compareTo(finalMaxCost) > 0) return false;
+                    }
+                    if (hasUsableStart(ctx)) {
+                        double maxRadiusKm = maxRouteRadiusKm(ctx);
+                        if (haversineKm(ctx.startLat(), ctx.startLon(), dest.getLatitude(), dest.getLongitude()) > maxRadiusKm) return false;
+                    }
+                    return true;
+                })
                 .collect(Collectors.toList());
     }
 
