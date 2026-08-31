@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import api from '../api';
+import { userApi } from '../api';
 
 const Onboarding: React.FC = () => {
   const [step, setStep] = useState(1);
@@ -36,7 +36,7 @@ const Onboarding: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      await api.post('/onboarding', {
+      await userApi.submitOnboarding({
         preferredTags: tags,
         minBudget,
         maxBudget,
@@ -115,3 +115,4 @@ const Onboarding: React.FC = () => {
 };
 
 export default Onboarding;
+

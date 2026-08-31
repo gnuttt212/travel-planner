@@ -1,56 +1,71 @@
 import { useEffect, useState } from 'react';
-import api, { getAuthTokenQueryParam, messagingApi } from '../api';
-import type { ProfileResponse, UserSearchResult, FriendRequestDto } from '../api';
+import { getAuthTokenQueryParam } from '../api';
+import type { FriendRequestDto } from '../api';
+import { 
+  useProfile, 
+  useFriends, 
+  useIncomingRequests, 
+  useOutgoingRequests, 
+  useSearchUsers, 
+  useUpdateProfile,
+  useSendFriendRequest,
+  useRespondFriendRequest,
+  useRemoveFriend
+} from '../hooks/useUserProfile';
+import { useConversation, useSendMessage } from '../hooks/useMessaging';
+import { useQueryClient } from '@tanstack/react-query';
 
 const DEFAULT_AVATAR = 'https://api.dicebear.com/6.x/identicon/svg?seed=travel-planner';
 
 export default function Profile() {
-  const [profile, setProfile] = useState<ProfileResponse | null>(null);
-  const [friends, setFriends] = useState<UserSearchResult[]>([]);
-  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
-  const [incoming, setIncoming] = useState<FriendRequestDto[]>([]);
-  const [outgoing, setOutgoing] = useState<FriendRequestDto[]>([]);
+  const queryClient = useQueryClient();
   const [query, setQuery] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'friends' | 'requests' | 'search'>('profile');
   const [notification, setNotification] = useState<string>('');
+  
+  // Chat state
   const [chatWith, setChatWith] = useState<string | null>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState('');
+  
+  // Profile edit state
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [bio, setBio] = useState('');
-  const [loading, setLoading] = useState(true);
+  
   const [errorMessage, setErrorMessage] = useState('');
 
-  useEffect(() => {
-    Promise.all([
-      api.get<{ data: ProfileResponse }>('/profile'),
-      api.get<{ data: UserSearchResult[] }>('/profile/friends'),
-      api.get<{ data: FriendRequestDto[] }>('/profile/friend-requests/incoming'),
-      api.get<{ data: FriendRequestDto[] }>('/profile/friend-requests/outgoing'),
-    ])
-      .then(([profileRes, friendsRes, incomingRes, outgoingRes]) => {
-        const profileData = profileRes.data.data;
-        setProfile(profileData);
-        setDisplayName(profileData.displayName || '');
-        setAvatarUrl(profileData.avatarUrl || '');
-        setBio(profileData.bio || '');
-        setFriends(friendsRes.data.data);
-        setIncoming(incomingRes.data.data);
-        setOutgoing(outgoingRes.data.data);
-      })
-      .catch((error) => {
-        console.error(error);
-        setErrorMessage(error.response?.data?.message || 'Không tải được thông tin người dùng.');
-      })
-      .finally(() => setLoading(false));
+  // Queries
+  const { data: profile, isLoading: isProfileLoading, isError: isProfileError } = useProfile();
+  const { data: friends = [] } = useFriends();
+  const { data: incoming = [] } = useIncomingRequests();
+  const { data: outgoing = [] } = useOutgoingRequests();
+  const { data: searchResults = [] } = useSearchUsers(query);
+  const { data: chatMessages = [] } = useConversation(chatWith);
 
+  // Mutations
+  const updateProfileMutation = useUpdateProfile();
+  const sendRequestMutation = useSendFriendRequest();
+  const respondRequestMutation = useRespondFriendRequest();
+  const removeFriendMutation = useRemoveFriend();
+  const sendMessageMutation = useSendMessage();
+
+  // Initialize edit state when profile is loaded or edit mode toggles
+  useEffect(() => {
+    if (profile && editMode) {
+      setDisplayName(profile.displayName || '');
+      setAvatarUrl(profile.avatarUrl || '');
+      setBio(profile.bio || '');
+    }
+  }, [profile, editMode]);
+
+  // EventSource for real-time notifications
+  useEffect(() => {
     const eventSource = new EventSource(`/api/v1/profile/friend-requests/stream${getAuthTokenQueryParam()}`);
     eventSource.addEventListener('friend-request', (event) => {
       const data = JSON.parse((event as MessageEvent).data) as FriendRequestDto;
       setNotification(`Bạn có lời mời mới từ ${data.senderEmail}`);
-      refreshRequests();
+      queryClient.invalidateQueries({ queryKey: ['friend-requests', 'incoming'] });
     });
     eventSource.onerror = () => {
       eventSource.close();
@@ -59,26 +74,12 @@ export default function Profile() {
     return () => {
       eventSource.close();
     };
-  }, []);
-
-  const fetchSearch = async (value: string) => {
-    setQuery(value);
-    try {
-      const res = await api.get<{ data: UserSearchResult[] }>('/profile/search', {
-        params: { q: value },
-      });
-      setSearchResults(res.data.data);
-    } catch (error: any) {
-      setErrorMessage(error.response?.data?.message || 'Không thể tìm kiếm người dùng.');
-    }
-  };
+  }, [queryClient]);
 
   const handleSendRequest = async (email: string) => {
     setErrorMessage('');
     try {
-      await api.post('/profile/friend-requests', { email });
-      await refreshRequests();
-      fetchSearch(query);
+      await sendRequestMutation.mutateAsync(email);
     } catch (error: any) {
       setErrorMessage(error.response?.data?.message || 'Không thể gửi lời mời.');
     }
@@ -87,51 +88,28 @@ export default function Profile() {
   const handleRespond = async (requestId: string, accept: boolean) => {
     setErrorMessage('');
     try {
-      await api.patch(`/profile/friend-requests/${requestId}/${accept ? 'accept' : 'reject'}`);
-      await refreshRequests();
-      refreshFriends();
-      fetchSearch(query);
+      await respondRequestMutation.mutateAsync({ requestId, accept });
     } catch (error: any) {
       setErrorMessage(error.response?.data?.message || 'Không thể xử lý lời mời.');
     }
   };
 
-  const refreshRequests = async () => {
-    const incomingRes = await api.get<{ data: FriendRequestDto[] }>('/profile/friend-requests/incoming');
-    const outgoingRes = await api.get<{ data: FriendRequestDto[] }>('/profile/friend-requests/outgoing');
-    setIncoming(incomingRes.data.data);
-    setOutgoing(outgoingRes.data.data);
-  };
-
-  const refreshFriends = async () => {
-    const friendsRes = await api.get<{ data: UserSearchResult[] }>('/profile/friends');
-    setFriends(friendsRes.data.data);
-  };
-
   const handleRemoveFriend = async (friendEmail: string) => {
     try {
-      await api.delete(`/profile/friends/${encodeURIComponent(friendEmail)}`);
-      await refreshFriends();
+      await removeFriendMutation.mutateAsync(friendEmail);
     } catch {
       setErrorMessage('Không thể xóa bạn.');
     }
   };
 
-  const openChat = async (friendEmail: string) => {
+  const openChat = (friendEmail: string) => {
     setChatWith(friendEmail);
-    try {
-      const res = await messagingApi.getConversation(friendEmail);
-      setChatMessages(res.data.data || []);
-    } catch {
-      setErrorMessage('Không thể tải hội thoại.');
-    }
   };
 
   const sendChatMessage = async () => {
     if (!chatWith || !chatInput.trim()) return;
     try {
-      const res = await messagingApi.sendMessage(chatWith, chatInput.trim());
-      setChatMessages((s) => [...s, res.data.data]);
+      await sendMessageMutation.mutateAsync({ to: chatWith, content: chatInput.trim() });
       setChatInput('');
     } catch {
       setErrorMessage('Không thể gửi tin nhắn.');
@@ -141,20 +119,23 @@ export default function Profile() {
   const handleSaveProfile = async () => {
     setErrorMessage('');
     try {
-      const res = await api.put<{ data: ProfileResponse }>('/profile', {
+      await updateProfileMutation.mutateAsync({
         displayName,
         avatarUrl,
         bio,
       });
-      setProfile(res.data.data);
       setEditMode(false);
     } catch {
       setErrorMessage('Không thể cập nhật hồ sơ.');
     }
   };
 
-  if (loading) {
+  if (isProfileLoading) {
     return <div className="loading-screen">Đang tải thông tin...</div>;
+  }
+  
+  if (isProfileError) {
+    return <div className="loading-screen">Không tải được thông tin người dùng.</div>;
   }
 
   return (
@@ -326,7 +307,7 @@ export default function Profile() {
                 type="search"
                 placeholder="Tìm theo email hoặc tên"
                 value={query}
-                onChange={(e) => fetchSearch(e.target.value)}
+                onChange={(e) => setQuery(e.target.value)}
               />
             </div>
             <ul className="user-list user-search-list">

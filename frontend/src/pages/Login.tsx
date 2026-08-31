@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import api, { planningApi } from '../api';
+import { userApi, planningApi } from '../api';
 
 interface LoginProps {
   onLoginSuccess: () => void;
@@ -30,11 +30,11 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     setErrorMessage('');
     try {
       if (isRegister) {
-        await api.post('/auth/register', { email, password, role: 'USER' });
+        await userApi.register({ email, password, role: 'USER' });
         alert('Registration successful. Please log in.');
         setIsRegister(false);
         } else {
-        const res = await api.post('/auth/login', { email, password });
+        const res = await userApi.login({ email, password });
         localStorage.setItem('token', res.data.data.token);
         onLoginSuccess();
         // If user already has trips, show their trips; otherwise go to planner

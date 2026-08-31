@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import api from '../api';
+import { tripApi } from '../api';
 import TripMap from '../components/TripMap';
 
 interface Waypoint {
@@ -82,7 +82,7 @@ const Planner: React.FC = () => {
         originalOrder: idx
       }));
 
-      const res = await api.post('/routes/optimize', payload);
+      const res = await tripApi.optimizeRoute(payload);
       const optimizedOrder = res.data.data.optimizedOrder;
       
       // Update the local state based on the new optimized order
@@ -151,3 +151,4 @@ const Planner: React.FC = () => {
 };
 
 export default Planner;
+
